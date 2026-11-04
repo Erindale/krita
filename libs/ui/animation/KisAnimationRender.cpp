@@ -24,7 +24,7 @@
 
 #include "KisVideoSaver.h"
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
 #include <QTemporaryDir>
 #include <memory>
 #endif
@@ -34,7 +34,7 @@ namespace
 
 bool looksLikeMp4(const QString &videoType)
 {
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     return videoType.contains(QStringLiteral("mp4"));
 #else
     return videoType == QStringLiteral("video/mp4");
@@ -43,7 +43,7 @@ bool looksLikeMp4(const QString &videoType)
 
 bool looksLikeMatroska(const QString &videoType)
 {
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     return videoType.contains(QStringLiteral("matroska"));
 #else
     return videoType == QStringLiteral("video/x-matroska");
@@ -55,7 +55,7 @@ bool looksLikeMatroska(const QString &videoType)
 bool KisAnimationRender::render(KisDocument *doc, KisViewManager *viewManager, KisAnimationRenderingOptions encoderOptions) {
     bool isTemporaryFramesDirectory = false;
     QString framesDirectory;
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     // The user may cancel the dialog prompting them for a video file or a frames
     // directory and we can't implicitly create them next to the document like on
     // desktop due to file system restrictions. So if we don't get those paths
@@ -90,7 +90,7 @@ bool KisAnimationRender::render(KisDocument *doc, KisViewManager *viewManager, K
     const QString extension = KisMimeDatabase::suffixesForMimeType(frameMimeType).first();
     const QString baseFileName = QString("%1/%2.%3").arg(framesDirectory, encoderOptions.basename, extension);
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     QString videoType = encoderOptions.videoFormatKey;
 #else
     QString videoType = encoderOptions.videoMimeType;
@@ -143,7 +143,7 @@ bool KisAnimationRender::render(KisDocument *doc, KisViewManager *viewManager, K
             // file path is going to be a sandbox URL. Making it absolute,
             // creating a directory above it or checking for its existence
             // neither make sense nor are they necessary.
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
             const QString videoOutputFilePath = encoderOptions.resolveAbsoluteVideoFilePath();
             KIS_SAFE_ASSERT_RECOVER_NOOP(QFileInfo(videoOutputFilePath).isAbsolute());
 
@@ -175,7 +175,7 @@ bool KisAnimationRender::render(KisDocument *doc, KisViewManager *viewManager, K
                 // Let's not mess with the file on Android like this, it's slow
                 // and could cause weird behavior depending on the provider.
                 // We'll notice that the file can't be opened later anyway.
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
                 QFile videoFile(videoOutputFilePath);
                 if (!videoFile.open(QIODevice::WriteOnly)) {
                     qWarning() << "Could not open" << videoFile.fileName() << "for writing! Do you have permission to write to this file?";
@@ -207,7 +207,7 @@ bool KisAnimationRender::render(KisDocument *doc, KisViewManager *viewManager, K
         if (!isTemporaryFramesDirectory) {
             QDir d(framesDirectory);
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
             bool shouldDeleteSequence = false;
 #else
             bool shouldDeleteSequence = encoderOptions.shouldDeleteSequence;
@@ -232,7 +232,7 @@ bool KisAnimationRender::render(KisDocument *doc, KisViewManager *viewManager, K
             }
 
             // We don't generate palette files on Android, that's done in memory.
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
             QStringList paletteFiles = d.entryList(QStringList() << "KritaTempPalettegen_*.png", QDir::Files);
 
             Q_FOREACH(const QString &f, paletteFiles) {

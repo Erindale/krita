@@ -538,7 +538,7 @@ GeneralTab::GeneralTab(QWidget *_parent, const char *_name)
 
     KConfigGroup group = KSharedConfig::openConfig()->group("File Dialogs");
     bool dontUseNative = true;
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     dontUseNative = false;
 #endif
 #ifdef Q_OS_UNIX
@@ -601,7 +601,7 @@ GeneralTab::GeneralTab(QWidget *_parent, const char *_name)
     grpAndroidWarningMessage->setText(
         i18n("Saving at a Location picked from the File Picker may slow down the startup!"));
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     m_urlResourceFolder->setVisible(false);
 
     m_resourceFolderSelector->setVisible(true);
@@ -824,7 +824,7 @@ void GeneralTab::setDefault()
     m_showEraserOutlinePainting->setChecked(cfg.showEraserOutlineWhilePainting(true));
     m_changeEraserBrushOutline->setChecked(!cfg.forceAlwaysFullSizedEraserOutline(true));
 
-#if defined Q_OS_ANDROID || defined Q_OS_MACOS || defined Q_OS_WIN
+#if defined KRITA_MOBILE || defined Q_OS_MACOS || defined Q_OS_WIN
     m_chkNativeFileDialog->setChecked(true);
 #else
     m_chkNativeFileDialog->setChecked(false);
@@ -3137,7 +3137,7 @@ bool KisDlgPreferences::editPreferences(std::optional<PageDesc>page)
         cfg.setAdaptivePlaybackRange(m_general->adaptivePlaybackRange());
         cfg.setAutoZoomTimelineToPlaybackRange(m_general->autoZoomTimelineToPlaybackRange());
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
         QFileInfo fi(m_general->m_resourceFolderSelector->currentData(Qt::UserRole).value<QString>());
 #else
         QFileInfo fi(m_general->m_urlResourceFolder->fileName());

@@ -808,7 +808,7 @@ bool KisDocument::exportDocumentImpl(const KritaUtils::ExportFileJob &job, KisPr
             backupDir = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
             break;
         default:
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
             // We deal with URIs, there may or may not be a "directory"
             backupDir = KisAutoSaveRecoveryDialog::autoSaveLocation();
             QDir().mkpath(backupDir);

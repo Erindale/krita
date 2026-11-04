@@ -53,7 +53,7 @@ public:
     bool lockFps() const;
     void setLockFps(bool value);
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     QString selectedFormat() const;
     void setSelectedFormat(const QString &value);
 
@@ -83,7 +83,7 @@ private:
     mutable KisConfig *config;
 };
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
 bool operator==(const RecorderProfile &left, const RecorderProfile &right);
 bool operator!=(const RecorderProfile &left, const RecorderProfile &right);
 #endif

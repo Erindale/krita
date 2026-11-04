@@ -2468,7 +2468,7 @@ void KisConfig::setKineticScrollingEnabled(bool value)
 
 int KisConfig::kineticScrollingGesture(bool defaultValue) const
 {
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     int defaultGesture = 1; // LeftMouseButtonGesture
 #else
     int defaultGesture = 2; // MiddleMouseButtonGesture
@@ -2996,7 +2996,7 @@ void  KisConfig::setAssistantsDrawMode(AssistantsDrawMode value)
 
 bool KisConfig::longPressEnabled(bool defaultValue) const
 {
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     bool defaultEnabled = true;
 #else
     bool defaultEnabled = false;

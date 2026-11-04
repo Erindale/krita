@@ -377,7 +377,7 @@ void KisLayerManager::layerProperties()
         dlg->setAttribute(Qt::WA_DeleteOnClose);
 
         const Qt::WindowFlags flags = dlg->windowFlags();
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
         // a Qt::Tool window seems incapable of receiving keyboard focus
         dlg->setWindowFlags(flags | Qt::Dialog);
 #else

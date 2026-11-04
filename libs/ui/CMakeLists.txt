@@ -1,18 +1,20 @@
 
-if (ANDROID)
+if (ANDROID OR CMAKE_SYSTEM_NAME STREQUAL "iOS")
     # We explicitly set QT_OPENGL_ES_3 here because Qt for some reason does
     # not enable this for Android.
     # See also: https://bugreports.qt.io/browse/QTBUG-64703
-    # This is not needed for ARM GNU/Linux environments.
+    # This is not needed for ARM GNU/Linux environments, and is deliberately
+    # not tied to KRITA_MOBILE: a KRITA_SIMULATE_MOBILE desktop build has a
+    # desktop GL Qt.
     add_definitions(-DQT_OPENGL_ES_3)
-    if (QT_MAJOR_VERSION STREQUAL "5")
-        include_directories (${Qt5AndroidExtras_INCLUDE_DIRS})
-    endif()
+endif()
+if (ANDROID AND QT_MAJOR_VERSION STREQUAL "5")
+    include_directories (${Qt5AndroidExtras_INCLUDE_DIRS})
 endif()
 
 add_subdirectory( tests )
 
-if (APPLE)
+if (MACOS)
     find_library(FOUNDATION_LIBRARY Foundation)
     find_library(APPKIT_LIBRARY AppKit)
 endif ()
@@ -566,7 +568,7 @@ if (ENABLE_UPDATERS)
 endif()
 
 
-if(APPLE)
+if(MACOS)
     set(kritaui_LIB_SRCS
         ${kritaui_LIB_SRCS}
         input/kis_extended_modifiers_mapper_osx.mm
@@ -574,13 +576,18 @@ if(APPLE)
     )
 endif()
 
+if(KRITA_MOBILE)
+    # in-process video encoder (ffmpeg cannot be run as a subprocess)
+    list(APPEND kritaui_LIB_SRCS
+        animation/KisLibavMediaEncoderRunnable.cpp
+        animation/KisMediaEncoderFormatPreferencesDialog.cpp
+        animation/KisMediaEncoderWrapper.cpp
+    )
+endif()
 if(ANDROID)
     list(APPEND kritaui_LIB_SRCS
         KisAndroidDonations.cpp
         animation/KisAndroidMediaEncoderRunnable.cpp
-        animation/KisLibavMediaEncoderRunnable.cpp
-        animation/KisMediaEncoderFormatPreferencesDialog.cpp
-        animation/KisMediaEncoderWrapper.cpp
     )
 endif()
 
@@ -804,20 +811,21 @@ if (Mlt7_FOUND)
     target_link_libraries(kritaui PRIVATE SDL2::SDL2 Mlt7::mlt Mlt7::mlt++)
 endif()
 
+if (KRITA_MOBILE AND TARGET LibAV)
+    target_link_libraries(kritaui PRIVATE LibAV)
+endif()
+
 if (ANDROID)
     target_link_libraries(kritaui PRIVATE GLESv3)
     target_link_libraries(kritaui PUBLIC Qt${QT_MAJOR_VERSION}::Gui)
     target_link_libraries(kritaui PRIVATE Qt${QT_MAJOR_VERSION}::AndroidExtras)
-    if(TARGET LibAV)
-        target_link_libraries(kritaui PRIVATE LibAV)
-    endif()
 endif()
 
 if (HAIKU)
   target_link_libraries(kritaui PRIVATE network expat iconv intl)
 endif()
 
-if(APPLE)
+if(MACOS)
     target_link_libraries(kritaui
         PUBLIC
         kritamacosutils
@@ -850,7 +858,7 @@ set_target_properties(kritaui
 install(TARGETS kritaui  ${INSTALL_TARGETS_DEFAULT_ARGS})
 
 
-if (APPLE)
+if (MACOS)
     install(FILES osx.stylesheet DESTINATION ${KDE_INSTALL_DATADIR}/krita)
 endif ()
 

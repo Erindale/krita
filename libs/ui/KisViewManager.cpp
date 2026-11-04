@@ -978,7 +978,7 @@ void KisViewManager::slotDocumentSaved()
 
 QString KisViewManager::canonicalPath()
 {
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     QString path = QFileInfo(document()->localFilePath()).canonicalPath();
     // if the path is based on a document tree then a directory would be returned. So check if it exists and more
     // importantly check if we have permissions
@@ -1233,7 +1233,7 @@ void KisViewManager::switchCanvasOnly(bool toggled)
         return;
     }
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     // On Android, expanded tool bars will crash when canvas-only mode is
     // toggled. To avoid this, we go looking for expanded toolbars and close
     // them instead of switching the mode and hitting a crash. Note that this
@@ -1380,7 +1380,7 @@ void KisViewManager::switchCanvasOnly(bool toggled)
 
     if (options.hideToolbarFullscreen) {
         // We already went searching for these on Android above.
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
         QList<QToolBar*> toolBars = main->findChildren<QToolBar*>();
 #endif
         Q_FOREACH (QToolBar* toolbar, toolBars) {

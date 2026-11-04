@@ -18,7 +18,7 @@ public:
     KisAnimationRenderingOptions();
 
     QString lastDocumentPath;
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     QString videoFormatKey;
     QString videoFormatPreferencesJson;
 #else
@@ -38,13 +38,13 @@ public:
     // with pointless image frames and also makes the export dialog not have to
     // be so screen-escapingly tall. Hence we only have one boolean there.
     bool shouldEncodeVideo = false;
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     bool shouldDeleteSequence = false;
 #endif
     bool includeAudio = false;
     bool wantsOnlyUniqueFrameSequence = false;
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     QString ffmpegPath;
 #endif
     int frameRate = 25;
@@ -53,12 +53,12 @@ public:
     QString scaleFilter;
     QString videoFileName;
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     QString customFFMpegOptions;
 #endif
     KisPropertiesConfigurationSP frameExportConfig;
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     QString resolveAbsoluteDocumentFilePath(const QString &documentPath) const;
     QString resolveAbsoluteVideoFilePath(const QString &documentPath) const;
     QString resolveAbsoluteFramesDirectory(const QString &documentPath) const;
@@ -71,7 +71,7 @@ public:
     enum RenderMode {
         RENDER_FRAMES_ONLY,
         RENDER_VIDEO_ONLY,
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
         RENDER_FRAMES_AND_VIDEO
 #endif
     };

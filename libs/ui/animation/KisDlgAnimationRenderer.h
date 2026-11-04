@@ -13,7 +13,7 @@
 
 #include <kis_types.h>
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
 #include <QVariantMap>
 #endif
 
@@ -53,7 +53,7 @@ public:
     KisAnimationRenderingOptions getEncoderOptions() const;
 
 private Q_SLOTS:
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     void selectRenderType(int i);
 #endif
     void selectRenderOptions();
@@ -68,7 +68,7 @@ private Q_SLOTS:
 
     void slotExportTypeChanged();
     void slotRenderTypeChanged();
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     void setFFmpegPath(const QString& path);
 #endif
 
@@ -78,14 +78,14 @@ private Q_SLOTS:
     static bool getPngHdr(KisPropertiesConfigurationSP cfg, bool wantsRenderWithHdr);
 
 protected Q_SLOTS:
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     void slotButtonClicked(int button) override;
 #endif
     void slotDialogAccepted();
 
 
 private: 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     enum FFmpegValidationResult {
         VALID = 1,
         INVALID = 0,
@@ -101,7 +101,7 @@ private:
 
     void updateWarnings();
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     FFmpegValidationResult validateFFmpeg(const QString &ffmpegPath);
 
     static QString defaultVideoFileName(KisDocument *doc, const QString &mimeType);
@@ -115,13 +115,13 @@ private:
 
     static void filterSequenceMimeTypes(QStringList &mimeTypes);
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     static QStringList makeVideoMimeTypesList();
     QStringList filterMimeTypeListByAvailableEncoders(const QStringList &mimeTypes);
 #endif
     static bool imageMimeSupportsHDR(QString &hdr);
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     static QVariantMap loadVideoFormatPreferences();
     static void saveVideoFormatPreferences(const QVariantMap &value);
 #endif
@@ -138,7 +138,7 @@ private:
     KisImageSP m_image;
     KisDocument *m_doc;
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     QButtonGroup *m_exportButtonGroup;
     QString m_imageDirectory;
     QString m_videoFileName;

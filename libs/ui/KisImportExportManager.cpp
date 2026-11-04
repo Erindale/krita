@@ -799,7 +799,7 @@ KisImportExportErrorCode KisImportExportManager::doExport(const QString &locatio
 //                    atomic and can end up with a partial file, but the time
 //                    window is much shorter and the likelihood of data loss
 //                    significantly lower because of it.
-#if !(defined(Q_OS_WIN) || defined(Q_OS_MACOS) || defined(Q_OS_ANDROID))
+#if !(defined(Q_OS_WIN) || defined(Q_OS_MACOS) || defined(KRITA_MOBILE))
 #define USE_QSAVEFILE
 #endif
 
@@ -852,7 +852,7 @@ KisImportExportErrorCode KisImportExportManager::doExportImpl(const QString &loc
                 qWarning() << "Could not commit QSaveFile";
                 status = KisImportExportErrorCannotWrite(file.error());
             }
-#elif defined(Q_OS_ANDROID)
+#elif defined(KRITA_MOBILE)
             // The Android file system is bananas, so it needs special handling.
 
             // If the temporary file is still open, ensure it's fully written.
@@ -952,7 +952,7 @@ KisImportExportErrorCode KisImportExportManager::doExportImpl(const QString &loc
 
 QString KisImportExportManager::getAlsoAsKraLocation(const QString location) const
 {
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     return getUriForAdditionalFile(location, nullptr);
 #else
     return location + ".kra";

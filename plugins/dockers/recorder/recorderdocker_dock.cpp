@@ -703,7 +703,7 @@ void RecorderDockerDock::onExportButtonClicked()
 
     KisDocument *document = d->canvas->imageView()->document();
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     exportSettings->videoFileName = QFileInfo(document->caption().trimmed()).completeBaseName();
 #endif
     exportSettings->inputDirectory = d->outputDirectory;

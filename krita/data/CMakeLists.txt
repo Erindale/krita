@@ -23,7 +23,9 @@ endif()
 
 if (ANDROID)
     add_subdirectory( donation )
-else()
-    # Both layouts are unsupported since they detach/create a new window
+endif()
+
+if (NOT KRITA_MOBILE)
+    # Both layouts are unsupported on mobile since they detach/create a new window
     add_subdirectory( windowlayouts )
 endif()

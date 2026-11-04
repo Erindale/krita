@@ -9,6 +9,15 @@ endif()
 project(krita LANGUAGES ${SUPPORTED_LANGUAGES})
 message(STATUS "Using CMake version: ${CMAKE_VERSION}")
 
+# CMake sets APPLE for iOS too (and IOS for iOS only). MACOS marks what
+# exists only on macOS: AppKit, kritamacosutils, .app bundles with a
+# Frameworks/ directory, command-line tools.
+if (APPLE AND NOT IOS)
+    set(MACOS TRUE)
+else()
+    set(MACOS FALSE)
+endif()
+
 # Select the Qt version we want to use
 # Qt5 is the default, set QT_MAJOR_VERSION to 6 to look for Qt6
 option(BUILD_WITH_QT6 "Build against Qt 6" OFF)
@@ -85,7 +94,9 @@ endif()
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 if (APPLE)
-    add_subdirectory(packaging/macos)
+    if (MACOS)
+        add_subdirectory(packaging/macos)
+    endif()
 
     if(NOT CMAKE_GENERATOR MATCHES "Xcode")
       execute_process(COMMAND
@@ -105,7 +116,11 @@ if (APPLE)
     else()
         set(MACOS_MINIMUM_VERSION 12)
     endif()
-    add_definitions(-mmacosx-version-min=${MACOS_MINIMUM_VERSION} -Wno-macro-redefined -Wno-deprecated-register)
+    if (MACOS)
+        add_definitions(-mmacosx-version-min=${MACOS_MINIMUM_VERSION})
+    endif()
+    # iOS: the deployment target comes from CMAKE_OSX_DEPLOYMENT_TARGET
+    add_definitions(-Wno-macro-redefined -Wno-deprecated-register)
     if (CMAKE_OSX_ARCHITECTURES)
         message(STATUS "CMake OSX architectures: ${CMAKE_OSX_ARCHITECTURES}")
     endif()
@@ -505,6 +520,24 @@ include(KDECompilerSettings)
 include(KDEInstallDirs)
 
 include(KDECMakeSettings)
+
+# Android and iOS share most of their platform code: no helper processes
+# (ffmpeg, G'MIC), a single fixed main window, save-in-place file semantics,
+# touch defaults. KRITA_MOBILE (CMake variable and compile definition)
+# guards that shared code; Q_OS_ANDROID / Q_OS_IOS stay for what really is
+# platform-specific (JNI, Storage Access Framework, UIKit).
+#
+# KRITA_SIMULATE_MOBILE compiles the mobile code paths on a desktop
+# platform. The result is not usable (no GLES, no file picker integration);
+# it exists so the mobile code can be built and checked without a device.
+option(KRITA_SIMULATE_MOBILE "Compile the mobile (Android/iOS) code paths on a desktop platform, for testing only" OFF)
+if (ANDROID OR CMAKE_SYSTEM_NAME STREQUAL "iOS" OR KRITA_SIMULATE_MOBILE)
+    set(KRITA_MOBILE TRUE)
+    add_compile_definitions(KRITA_MOBILE)
+else()
+    set(KRITA_MOBILE FALSE)
+endif()
+add_feature_info("Mobile code paths" KRITA_MOBILE "Shared Android/iOS behaviour (KRITA_MOBILE)")
 
 # Link libraries and plugins into one executable instead of loading them
 # at runtime. Required on iOS; works on other platforms for testing.
@@ -1547,15 +1580,16 @@ set_package_properties(Poppler PROPERTIES
     PURPOSE "Required by the Krita PDF filter.")
 
 ##
-## Test for libav on Android
+## Test for libav on mobile platforms (no ffmpeg subprocess there, the
+## encoder runs in-process)
 ##
-if(ANDROID)
+if(KRITA_MOBILE)
     find_package(PkgConfig REQUIRED)
     set_package_properties(PkgConfig PROPERTIES
         DESCRIPTION "pkg-config"
         URL "https://www.freedesktop.org/wiki/Software/pkg-config/"
         TYPE REQUIRED
-        PURPOSE "Needed to find ffmpeg libraries on Android."
+        PURPOSE "Needed to find ffmpeg libraries on Android and iOS."
     )
 
     pkg_check_modules(LibAV REQUIRED IMPORTED_TARGET GLOBAL
@@ -1581,7 +1615,7 @@ if(ANDROID)
         DESCRIPTION "FFmpeg libraries"
         URL "https://ffmpeg.org/"
         TYPE REQUIRED
-        PURPOSE "Needed to render animations and timelapses on Android."
+        PURPOSE "Needed to render animations and timelapses on Android and iOS."
     )
 endif()
 

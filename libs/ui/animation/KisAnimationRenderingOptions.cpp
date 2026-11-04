@@ -11,7 +11,7 @@
 
 #include <KisFileUtils.h>
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
 #include <QJsonDocument>
 #endif
 
@@ -20,7 +20,7 @@ KisAnimationRenderingOptions::KisAnimationRenderingOptions()
 
 }
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
 QString KisAnimationRenderingOptions::resolveAbsoluteDocumentFilePath(const QString &documentPath) const
 {
     return
@@ -58,7 +58,7 @@ QString KisAnimationRenderingOptions::resolveAbsoluteFramesDirectory() const
 
 KisAnimationRenderingOptions::RenderMode KisAnimationRenderingOptions::renderMode() const
 {
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     if (shouldEncodeVideo) {
         return RENDER_VIDEO_ONLY;
     } else {
@@ -90,7 +90,7 @@ KisPropertiesConfigurationSP KisAnimationRenderingOptions::toProperties() const
     config->setProperty("frame_mimetype", frameMimeType);
 
     config->setProperty("encode_video", shouldEncodeVideo);
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     config->setProperty("delete_sequence", shouldDeleteSequence);
 #endif
     config->setProperty("only_unique_frames", wantsOnlyUniqueFrameSequence);
@@ -101,7 +101,7 @@ KisPropertiesConfigurationSP KisAnimationRenderingOptions::toProperties() const
     config->setProperty("include_audio", includeAudio);
     config->setProperty("filename", videoFileName);
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     config->setProperty("video_format_key", videoFormatKey);
     config->setProperty("video_format_preferences_json", videoFormatPreferencesJson);
 #else
@@ -125,13 +125,13 @@ void KisAnimationRenderingOptions::fromProperties(KisPropertiesConfigurationSP c
     sequenceStart = config->getPropertyLazy("sequence_start", 0);
     frameMimeType = config->getPropertyLazy("frame_mimetype", frameMimeType);
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     bool encodeVideoDefault = true;
 #else
     bool encodeVideoDefault = false;
 #endif
     shouldEncodeVideo = config->getPropertyLazy("encode_video", encodeVideoDefault);
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     shouldDeleteSequence = config->getPropertyLazy("delete_sequence", false);
 #endif
     wantsOnlyUniqueFrameSequence = config->getPropertyLazy("only_unique_frames", false);
@@ -142,7 +142,7 @@ void KisAnimationRenderingOptions::fromProperties(KisPropertiesConfigurationSP c
     includeAudio = config->getPropertyLazy("include_audio", true);
     videoFileName = config->getPropertyLazy("filename", "");
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     videoFormatKey = config->getPropertyLazy("video_format_key", QString());
     videoFormatPreferencesJson = config->getPropertyLazy("video_format_preferences_json", QString());
 #else

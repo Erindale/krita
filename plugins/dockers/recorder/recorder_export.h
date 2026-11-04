@@ -42,12 +42,12 @@ private Q_SLOTS:
     void onSpinScaleHeightValueChanged(int value);
     void onButtonLockRatioToggled(bool checked);
     void onButtonLockFpsToggled(bool checked);
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     void onButtonBrowseFfmpegClicked();
 #endif
     void onComboProfileIndexChanged(int index);
     void onButtonEditProfileClicked();
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     void onEditVideoPathChanged(const QString &videoFilePath);
     void onButtonBrowseExportClicked();
 #endif
@@ -61,14 +61,14 @@ private Q_SLOTS:
     void onExporterProgressUpdated(int frameNo);
     // third page
     void onButtonWatchItClicked();
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     void onButtonShowInFolderClicked();
 #endif
     void onButtonRemoveSnapshotsClicked();
     void onButtonRestartClicked();
     void onCleanUpFinished();
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
 private:
      bool eventFilter(QObject *obj, QEvent *event) override;
 #endif

@@ -5,7 +5,7 @@ set (krita_BUNDLE_FILES
      RGBA_brushes.bundle
 )
 
-if (NOT ANDROID)
+if (NOT KRITA_MOBILE)
     set (krita_BUNDLE_FILES
          ${krita_BUNDLE_FILES}
          Krita_3_Default_Resources.bundle

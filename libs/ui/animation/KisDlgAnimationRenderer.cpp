@@ -44,7 +44,7 @@
 #include "KisAnimationRenderingOptions.h"
 #include "kis_image_config.h"
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
 #include <QButtonGroup>
 #include <QJsonDocument>
 #include "animation/KisMediaEncoderFormatPreferencesDialog.h"
@@ -78,7 +78,7 @@ KisDlgAnimationRenderer::KisDlgAnimationRenderer(KisDocument *doc, QWidget *pare
     m_page->lblWarnings->hide();
     m_page->lblWarnings->setPixmap(KisIconUtils::loadIcon(QStringLiteral("dialog-warning")).pixmap(32, 32));
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     m_exportButtonGroup = new QButtonGroup(this);
     m_exportButtonGroup->addButton(m_page->bnExportImages);
     m_exportButtonGroup->addButton(m_page->bnExportVideo);
@@ -135,7 +135,7 @@ KisDlgAnimationRenderer::KisDlgAnimationRenderer(KisDocument *doc, QWidget *pare
         }
     }
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     // Set up video export formats on Android. No ffmpeg here.
     m_videoFormatPreferences = loadVideoFormatPreferences();
     const QVector<KisMediaEncoderFormat *> videoFormats = KisMediaEncoderWrapper::getSupportedFormats();
@@ -150,7 +150,7 @@ KisDlgAnimationRenderer::KisDlgAnimationRenderer(KisDocument *doc, QWidget *pare
     m_page->cmbScaleFilter->addItem(i18nc("nearest neighbor filtering", "neighbor"), "neighbor");
     m_page->cmbScaleFilter->addItem(i18nc("spline filtering", "spline"), "spline");
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     m_page->videoFilename->setMode(KoFileDialog::SaveFile);
     m_page->ffmpegLocation->setMode(KoFileDialog::OpenFile);
 #endif
@@ -161,7 +161,7 @@ KisDlgAnimationRenderer::KisDlgAnimationRenderer(KisDocument *doc, QWidget *pare
         connect(m_page->bnExportOptions, SIGNAL(clicked()), this, SLOT(sequenceMimeTypeOptionsClicked()));
         connect(m_page->bnRenderOptions, SIGNAL(clicked()), this, SLOT(selectRenderOptions()));
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
         connect(m_exportButtonGroup,
                 QOverload<QAbstractButton *>::of(&QButtonGroup::buttonClicked),
                 this,
@@ -176,7 +176,7 @@ KisDlgAnimationRenderer::KisDlgAnimationRenderer(KisDocument *doc, QWidget *pare
         connect(m_page->intWidth, SIGNAL(valueChanged(int)), SLOT(slotCheckWarnings()));
         connect(m_page->intHeight, SIGNAL(valueChanged(int)), SLOT(slotCheckWarnings()));
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
         connect(m_page->ffmpegLocation, SIGNAL(fileSelected(QString)), SLOT(setFFmpegPath(QString)));
 #endif
 
@@ -208,7 +208,7 @@ KisDlgAnimationRenderer::~KisDlgAnimationRenderer()
 
 void KisDlgAnimationRenderer::initializeRenderSettings(const KisDocument &doc, const KisAnimationRenderingOptions &lastUsedOptions)
 {
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     // Initialize FFmpeg location... (!)
     KisConfig cfg(false);
     QString cfgFFmpegPath = cfg.ffmpegLocation();
@@ -260,7 +260,7 @@ void KisDlgAnimationRenderer::initializeRenderSettings(const KisDocument &doc, c
         m_page->intWidth->setValue(lastUsedOptions.width);
         m_page->intHeight->setValue(lastUsedOptions.height);
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
         m_page->dirRequester->setStartDir(documentPath);
 #else
         m_page->videoFilename->setStartDir(lastUsedOptions.resolveAbsoluteDocumentFilePath(documentPath));
@@ -274,7 +274,7 @@ void KisDlgAnimationRenderer::initializeRenderSettings(const KisDocument &doc, c
         m_page->intWidth->setValue(m_image->width());
         m_page->intHeight->setValue(m_image->height());
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
         m_page->dirRequester->setStartDir(documentPath);
 #else
         m_page->videoFilename->setStartDir(lastUsedOptions.resolveAbsoluteDocumentFilePath(documentPath));
@@ -300,7 +300,7 @@ void KisDlgAnimationRenderer::initializeRenderSettings(const KisDocument &doc, c
     }
 
     // Initialize VIDEO render format...
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     const QString &lastVideoType = lastUsedOptions.videoFormatKey;
 #else
     const QString &lastVideoType = lastUsedOptions.videoMimeType;
@@ -313,7 +313,7 @@ void KisDlgAnimationRenderer::initializeRenderSettings(const KisDocument &doc, c
     }
 
     m_page->chkOnlyUniqueFrames->setChecked(lastUsedOptions.wantsOnlyUniqueFrameSequence);
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     if (lastUsedOptions.shouldEncodeVideo) {
         m_page->bnExportVideo->setChecked(true);
     } else {
@@ -326,7 +326,7 @@ void KisDlgAnimationRenderer::initializeRenderSettings(const KisDocument &doc, c
 
     slotExportTypeChanged();
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     {
         KisPropertiesConfigurationSP settings = loadLastConfiguration("VIDEO_ENCODER");
 
@@ -377,7 +377,7 @@ void KisDlgAnimationRenderer::initializeRenderSettings(const KisDocument &doc, c
 
 bool KisDlgAnimationRenderer::wantImageSequenceExport() const
 {
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     return !wantVideoExport();
 #else
     return m_page->shouldExportOnlyImageSequence->isChecked();
@@ -386,14 +386,14 @@ bool KisDlgAnimationRenderer::wantImageSequenceExport() const
 
 bool KisDlgAnimationRenderer::wantVideoExport() const
 {
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     return m_page->bnExportVideo->isChecked();
 #else
     return m_page->shouldExportOnlyVideo->isChecked();
 #endif
 }
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
 void KisDlgAnimationRenderer::getDefaultVideoEncoderOptions(const QString &mimeType,
                                                             KisPropertiesConfigurationSP cfg,
                                                             const QStringList &availableEncoders,
@@ -423,7 +423,7 @@ void KisDlgAnimationRenderer::filterSequenceMimeTypes(QStringList &mimeTypes)
     });
 }
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
 QStringList KisDlgAnimationRenderer::makeVideoMimeTypesList()
 {
     QStringList supportedMimeTypes = QStringList();
@@ -504,7 +504,7 @@ bool KisDlgAnimationRenderer::imageMimeSupportsHDR(QString &mime)
     return (mime == "image/png");
 }
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
 QVariantMap KisDlgAnimationRenderer::loadVideoFormatPreferences()
 {
     KisPropertiesConfigurationSP settings = loadLastConfiguration(QStringLiteral("VIDEO_ENCODER"));
@@ -540,7 +540,7 @@ void KisDlgAnimationRenderer::saveLastUsedConfiguration(QString configurationID,
 
 bool KisDlgAnimationRenderer::looksLikeGif(const QString &videoType)
 {
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     return videoType.contains(QStringLiteral(":gif"));
 #else
     return videoType == QStringLiteral("image/gif");
@@ -549,7 +549,7 @@ bool KisDlgAnimationRenderer::looksLikeGif(const QString &videoType)
 
 bool KisDlgAnimationRenderer::supportsAudio(const QString &videoType)
 {
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     KisMediaEncoderFormat *format = KisMediaEncoderWrapper::getFormatByKey(videoType);
     return format && format->supportsAudio();
 #else
@@ -572,7 +572,7 @@ KisHDRMetadataOptions KisDlgAnimationRenderer::optionsFromImage()
     return hdrOptions;
 }
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
 
 void KisDlgAnimationRenderer::setFFmpegPath(const QString& path) {
     // Let's START with the assumption that user-specified ffmpeg path is invalid
@@ -678,7 +678,7 @@ void KisDlgAnimationRenderer::updateWarnings()
         QString videoType = m_page->cmbRenderType->itemData(m_page->cmbRenderType->currentIndex()).toString();
         bool gif = looksLikeGif(videoType);
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
         const QRegularExpression minVerFFMpegRX(R"(^n{0,1}(?:[0-3]|4\.[01])[\.\-])");
         const QRegularExpressionMatch minVerFFMpegMatch = minVerFFMpegRX.match(ffmpegVersion);
 
@@ -729,7 +729,7 @@ void KisDlgAnimationRenderer::updateWarnings()
     }
 }
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
 QString KisDlgAnimationRenderer::defaultVideoFileName(KisDocument *doc, const QString &mimeType)
 {
     const QString docFileName = !doc->localFilePath().isEmpty() ? doc->localFilePath() : i18n("Untitled");
@@ -785,7 +785,7 @@ void KisDlgAnimationRenderer::selectRenderType(int index)
 
 void KisDlgAnimationRenderer::selectRenderOptions()
 {
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     QString key = m_page->cmbRenderType->currentData().toString();
     KisMediaEncoderFormat *format = KisMediaEncoderWrapper::getFormatByKey(key);
     KIS_SAFE_ASSERT_RECOVER_RETURN(format);
@@ -826,7 +826,7 @@ void KisDlgAnimationRenderer::selectRenderOptions()
     dlg.setButtons(KoDialog::Ok | KoDialog::Cancel);
     if (dlg.exec() == QDialog::Accepted) {
         saveLastUsedConfiguration("VIDEO_ENCODER", encoderConfigWidget->configuration());
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
         m_customFFMpegOptionsString = encoderConfigWidget->customUserOptionsString();
         m_wantsRenderWithHDR = encoderConfigWidget->videoConfiguredForHDR();
 #endif
@@ -856,7 +856,7 @@ void KisDlgAnimationRenderer::sequenceMimeTypeOptionsClicked()
             }
 
             //Important -- m_useHDR allows the synchronization of both the video and image render settings.
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
             if(imageMimeSupportsHDR(mimetype)) {
                 setPngHdr(exportConfig, m_wantsRenderWithHDR);
                 if (m_wantsRenderWithHDR) {
@@ -870,7 +870,7 @@ void KisDlgAnimationRenderer::sequenceMimeTypeOptionsClicked()
             dlg.setMainWidget(frameExportConfigWidget);
             dlg.setButtons(KoDialog::Ok | KoDialog::Cancel);
             if (dlg.exec() == QDialog::Accepted) {
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
                 m_wantsRenderWithHDR = getPngHdr(frameExportConfigWidget->configuration(), false);
 #endif
                 saveLastUsedConfiguration("img_sequence/" + mimetype, frameExportConfigWidget->configuration());
@@ -893,7 +893,7 @@ KisAnimationRenderingOptions KisDlgAnimationRenderer::getEncoderOptions() const
     options.lastDocumentPath = m_doc->localFilePath();
     QString videoType = m_page->cmbRenderType->currentData().toString();
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     bool video = wantVideoExport();
     options.shouldEncodeVideo = video;
     options.includeAudio = video && supportsAudio(videoType) && m_page->chkIncludeAudio->isChecked();
@@ -945,7 +945,7 @@ KisAnimationRenderingOptions KisDlgAnimationRenderer::getEncoderOptions() const
             KisImportExportManager::fillStaticExportConfigurationProperties(cfg, m_image);
         }
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
         const bool forceNecessaryHDRSettings = m_wantsRenderWithHDR && imageMimeSupportsHDR(options.frameMimeType);
         if (forceNecessaryHDRSettings) {
             KIS_SAFE_ASSERT_RECOVER_NOOP(options.frameMimeType == "image/png");
@@ -960,7 +960,7 @@ KisAnimationRenderingOptions KisDlgAnimationRenderer::getEncoderOptions() const
     return options;
 }
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
 KisDlgAnimationRenderer::FFmpegValidationResult KisDlgAnimationRenderer::validateFFmpeg(const QString &ffmpegPath)
 {
     if (!ffmpegPath.isEmpty()) {
@@ -981,7 +981,7 @@ KisDlgAnimationRenderer::FFmpegValidationResult KisDlgAnimationRenderer::validat
 }
 #endif
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
 void KisDlgAnimationRenderer::slotButtonClicked(int button)
 {
     if (button == KoDialog::Ok && !m_page->shouldExportOnlyImageSequence->isChecked()) {
@@ -1010,7 +1010,7 @@ void KisDlgAnimationRenderer::slotButtonClicked(int button)
 
 void KisDlgAnimationRenderer::slotDialogAccepted()
 {
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     m_imageDirectory.clear();
     m_videoFileName.clear();
 
@@ -1064,7 +1064,7 @@ void KisDlgAnimationRenderer::slotExportTypeChanged()
 {
     setUpdatesEnabled(false);
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     if (wantVideoExport()) {
         m_page->stkExport->setCurrentWidget(m_page->pgVideo);
     } else {

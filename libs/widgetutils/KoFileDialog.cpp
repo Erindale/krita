@@ -153,7 +153,7 @@ void KoFileDialog::createFileDialog()
     KConfigGroup group = KSharedConfig::openConfig()->group("File Dialogs");
 
     bool dontUseNative = true;
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     dontUseNative = false;
 #endif
 #ifdef Q_OS_UNIX
@@ -355,7 +355,7 @@ QString KoFileDialog::filename()
             retryNeeded = true;
 
 // We can only write to the Uri that was returned, we don't have permission to change the Uri.
-#if !(defined(Q_OS_MACOS) || defined(Q_OS_ANDROID))
+#if !(defined(Q_OS_MACOS) || defined(KRITA_MOBILE))
             url = url + extension;
 #endif
         }

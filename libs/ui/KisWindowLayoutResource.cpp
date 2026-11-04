@@ -385,7 +385,7 @@ void KisWindowLayoutResource::loadXml(const QDomElement &element) const
     d->primaryWorkspaceFollowsFocus = KisDomUtils::toInt(element.attribute("primaryWorkspaceFollowsFocus", "0"));
     d->primaryWindow = QUuid::fromString(element.attribute("primaryWindow"));
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     if (element.firstChildElement("window") != element.lastChildElement("window")) {
         QMessageBox::warning(qApp->activeWindow(), i18nc("@title:window", "Krita"),
                              "Workspaces with multiple windows isn't supported on Android");

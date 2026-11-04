@@ -80,7 +80,7 @@
 #include <commands/KoKeepShapesSelectedCommand.h>
 #include <kis_display_color_converter.h>
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
 #include <QMenuBar>
 #endif
 
@@ -323,7 +323,7 @@ void SvgTextTool::showEditor()
     }
     if (!m_editor->isVisible()) {
         m_editor->setInitialShape(shape);
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
         // for window manager
         m_editor->setWindowFlags(Qt::Dialog);
         m_editor->menuBar()->setNativeMenuBar(false);

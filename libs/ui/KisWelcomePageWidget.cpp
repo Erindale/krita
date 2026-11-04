@@ -194,7 +194,7 @@ KisWelcomePageWidget::KisWelcomePageWidget(QWidget *parent)
 
 
 #ifdef ENABLE_UPDATERS
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     // Setup version updater, but do not check for them, unless the user explicitly
     // wants to check for updates.
     // * No updater is created for Linux/Steam, Windows/Steam and Windows/Store distributions,
@@ -232,7 +232,7 @@ KisWelcomePageWidget::KisWelcomePageWidget(QWidget *parent)
 			m_versionUpdater->checkForUpdate();
 		}
 	}
-#endif // ifndef Q_OS_ANDROID
+#endif // ifndef KRITA_MOBILE
 #endif // ENABLE_UPDATERS
 
 
@@ -317,7 +317,7 @@ void KisWelcomePageWidget::slotUpdateThemeColors()
     recentDocumentsListView->setStyleSheet(blendedStyle);
     newsWidget->setStyleSheet(blendedStyle);
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     blendedStyle = blendedStyle + "\nQPushButton { padding: 10px }";
 #endif
 

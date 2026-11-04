@@ -272,7 +272,8 @@ public:
 #if KRITA_QT_HAS_ANDROID_QPLATFORMSCREEN_DENSITY_ADJUSTMENT
     KisAction *changeInterfaceScale {nullptr};
 #endif
-#else
+#endif
+#ifndef KRITA_MOBILE
     KisAction *toggleDetachCanvas {nullptr};
     KisAction *newWindow {nullptr};
 #endif
@@ -384,7 +385,7 @@ KisMainWindow::KisMainWindow(QUuid uuid)
     setStandardToolBarMenuEnabled(true);
     setTabPosition(Qt::AllDockWidgetAreas, QTabWidget::North);
     setDockNestingEnabled(true);
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     // On Android, the animations for docks and menus are not only slow, but
     // also can cause crashes in some circumstances. Turning them off feels
     // better and avoids those.
@@ -445,7 +446,7 @@ KisMainWindow::KisMainWindow(QUuid uuid)
     d->styleActions = new QActionGroup(this);
     QAction * action;
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
 
     Q_FOREACH (QString styleName, QStyleFactory::keys()) {
 
@@ -636,7 +637,7 @@ KisMainWindow::KisMainWindow(QUuid uuid)
 
     this->winId(); // Ensures the native window has been created.
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     // HACK: This prevents the mainWindow from going beyond the screen with no
     // way to bring it back. Apparently the size doesn't matter here as long as
     // it remains fixed?
@@ -646,6 +647,7 @@ KisMainWindow::KisMainWindow(QUuid uuid)
     s->setOrientationUpdateMask(Qt::LandscapeOrientation|Qt::InvertedLandscapeOrientation|Qt::PortraitOrientation|Qt::InvertedPortraitOrientation);
     connect(s, SIGNAL(orientationChanged(Qt::ScreenOrientation)), this, SLOT(orientationChanged()));
 
+#ifdef Q_OS_ANDROID
 #if KRITA_QT_HAS_ANDROID_QPLATFORMSCREEN_DENSITY_ADJUSTMENT
     // When the screen's UI scale changes, we have to hide and show it to get
     // its contents to update, otherwise it fails to re-render altogether.
@@ -663,7 +665,8 @@ KisMainWindow::KisMainWindow(QUuid uuid)
     // the event could reach KisApplication's platform integration, it is cleared by KisOpenGLModeProber::probeFormat.
     // So, we send it manually when MainWindow shows up.
     QAndroidJniObject::callStaticMethod<void>("org/qtproject/qt5/android/QtNative", "setApplicationState", "(I)V", Qt::ApplicationActive);
-#endif
+#endif /* Q_OS_ANDROID */
+#endif /* KRITA_MOBILE */
 
     setAcceptDrops(true);
     QTabBar *tabBar = d->findTabBarHACK();
@@ -1044,7 +1047,7 @@ bool KisMainWindow::canvasDetached() const
 
 void KisMainWindow::setCanvasDetached(bool detach)
 {
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     if (detach) {
         QMessageBox::warning(this, i18nc("@title:window", "Krita"),
                              "Detach Canvas is unsupported on Android");
@@ -2261,7 +2264,7 @@ void KisMainWindow::importAnimation()
 void KisMainWindow::importVideoAnimation()
 {
     // Importing video requires ffmpeg, which is not available on Android.
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     KisDocument *document;
     KisDlgImportVideoAnimation dlg(this, activeView());
 
@@ -2716,7 +2719,7 @@ void KisMainWindow::updateWindowMenu()
     QMenu *menu = d->windowMenu->menu();
     menu->clear();
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     menu->addAction(d->newWindow);
 #endif
     menu->addAction(d->documentMenu);
@@ -2971,7 +2974,7 @@ KisView* KisMainWindow::newView(QObject *document, QMdiSubWindow *subWindow)
 
 void KisMainWindow::newWindow()
 {
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     // Check if current mainwindow exists, just to be sure.
     if (KisPart::instance()->currentMainwindow()) {
         QMessageBox::warning(this, i18nc("@title:window", "Krita"),
@@ -3095,7 +3098,7 @@ void KisMainWindow::createActions()
     connect(d->importAnimation, SIGNAL(triggered()), this, SLOT(importAnimation()));
 
     // Importing video requires ffmpeg, which is not available on Android.
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     d->importVideoAnimation = actionManager->createAction("file_import_video_animation");
     connect(d->importVideoAnimation, SIGNAL(triggered()), this, SLOT(importVideoAnimation()));
 #endif
@@ -3141,7 +3144,7 @@ void KisMainWindow::createActions()
     d->resetConfigurations  = actionManager->createAction("reset_configurations");
     connect(d->resetConfigurations, SIGNAL(triggered()), this, SLOT(slotResetConfigurations()));
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     d->toggleDetachCanvas = actionManager->createAction("view_detached_canvas");
     d->toggleDetachCanvas->setChecked(false);
     connect(d->toggleDetachCanvas, SIGNAL(toggled(bool)), SLOT(setCanvasDetached(bool)));
@@ -3196,7 +3199,8 @@ void KisMainWindow::createActions()
         connect(d->changeInterfaceScale, &QAction::triggered, this, &KisMainWindow::slotChangeInterfaceScale);
     }
 #endif
-#else
+#endif /* Q_OS_ANDROID */
+#ifndef KRITA_MOBILE
     d->newWindow = actionManager->createAction("view_newwindow");
     connect(d->newWindow, SIGNAL(triggered(bool)), this, SLOT(newWindow()));
 #endif

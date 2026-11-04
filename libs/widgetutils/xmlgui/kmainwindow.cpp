@@ -588,7 +588,7 @@ void KisKMainWindow::applyMainWindowSettings(const KConfigGroup &cg)
     QMenuBar *mb = internalMenuBar(this);
     if (mb && !mb->isNativeMenuBar()) {
         QString entry = cg.readEntry("MenuBar", "Enabled");
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
         // HACK: Previously, since the native menubar was enabled, this made the
         // value in Config = "Disabled". This makes the menubar not show up on
         // devices.

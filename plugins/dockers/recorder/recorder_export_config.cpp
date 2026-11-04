@@ -12,14 +12,14 @@
 #include <QDir>
 #include <QRegularExpression>
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
 #include <QJsonDocument>
 #endif
 
 namespace
 {
 const QString keyAnimationExport = "ANIMATION_EXPORT";
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
 const QString keyFfmpegPath = "ffmpeg_path";
 const QString keyVideoDirectory = "recorder_export/videodirectory";
 #endif
@@ -33,7 +33,7 @@ const QString keyResize = "recorder_export/resize";
 const QString keySize = "recorder_export/size";
 const QString keyLockRatio = "recorder_export/lockratio";
 const QString keyLockFps = "recorder_export/lockfps";
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
 const QString keySelectedFormat = "recorder_export/selectedformat";
 const QString keyFormatPreferences = "recorder_export/formatpreferences";
 #else
@@ -209,7 +209,7 @@ void RecorderExportConfig::loadConfiguration(RecorderExportSettings *settings, b
     settings->resize = resize();
     settings->size = size();
     settings->lockRatio = lockRatio();
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     settings->selectedFormat = selectedFormat();
     settings->formatPreferences = formatPreferences();
 #else
@@ -327,7 +327,7 @@ void RecorderExportConfig::setLockFps(bool value)
     config->writeEntry(keyLockFps, value);
 }
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
 QString RecorderExportConfig::selectedFormat() const
 {
     return config->readEntry(keySelectedFormat, QString());

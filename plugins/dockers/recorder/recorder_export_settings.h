@@ -14,7 +14,7 @@
 #include <QSize>
 #include "recorder_format.h"
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
 #include <QVariantMap>
 #else
 struct RecorderProfile
@@ -38,7 +38,7 @@ struct RecorderExportSettings {
     int firstFrameSec = 2;
     int lastFrameSec = 5;
     QSize size;
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     QString selectedFormat;
     QVariantMap formatPreferences;
 #else
@@ -57,7 +57,7 @@ struct RecorderExportSettings {
     RecorderFormat format;
     QSize imageSize;
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     QStringList inputFilePaths;
 #else
     QString videoFileName;

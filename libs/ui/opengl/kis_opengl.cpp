@@ -917,7 +917,7 @@ KisOpenGL::RendererConfig KisOpenGL::selectSurfaceConfig(KisOpenGL::OpenGLRender
     using Info = boost::optional<KisOpenGLModeProber::Result>;
 
     QHash<OpenGLRenderer, Info> renderersToTest;
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     renderersToTest.insert(RendererDesktopGL, Info());
 #endif
     renderersToTest.insert(RendererOpenGLES, Info());
@@ -958,7 +958,9 @@ KisOpenGL::RendererConfig KisOpenGL::selectSurfaceConfig(KisOpenGL::OpenGLRender
                                                                     shouldInhibitCompatibilityProfile);
     Info info = KisOpenGLModeProber::instance()->probeFormat(defaultConfig);
 
-#ifndef Q_OS_MACOS
+#if !defined(Q_OS_MACOS) && !defined(Q_OS_IOS)
+    // (iOS has no desktop GL; every probe below also creates a temporary
+    // QGuiApplication, so they are skipped there as on macOS)
     // When RendererAuto is active, Qt may perform insane things internally,
     // e.g. switch from OpenGL to OpenGLES automatically. And the presence of
     // the compatibility profile flag will cause the context creation process
@@ -997,7 +999,7 @@ KisOpenGL::RendererConfig KisOpenGL::selectSurfaceConfig(KisOpenGL::OpenGLRender
         info = KisOpenGLModeProber::instance()->probeFormat(defaultConfig);
     }
 
-#endif /* Q_OS_MACOS */
+#endif /* !Q_OS_MACOS && !Q_OS_IOS */
 
 #ifdef Q_OS_WIN
     if (!info) {

@@ -227,7 +227,7 @@ KisApplication::KisApplication(const QString &key, int &argc, char **argv)
     : QtSingleApplication(key, argc, argv)
     , d(new Private)
 {
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     // The hardware renderer backend on Android doesn't support proper stacking,
     // causing windows with QtQuick widgets to always stack behind everything
     // else, including our own dialog decorations.
@@ -250,7 +250,7 @@ KisApplication::KisApplication(const QString &key, int &argc, char **argv)
     if (!widgetStyleFromConfig.isEmpty()) {
         qApp->setStyle(widgetStyleFromConfig);
     }
-#if defined Q_OS_WIN || defined Q_OS_MACOS || defined Q_OS_ANDROID
+#if defined Q_OS_WIN || defined Q_OS_MACOS || defined KRITA_MOBILE
     else {
         // default to Fusion instead of styles that use native theming
         qApp->setStyle("fusion");
@@ -443,7 +443,7 @@ bool KisApplication::registerResources()
 
     reg->registerFixup(10, new KisBrushTypeMetaDataFixup());
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     QString databaseLocation = KoResourcePaths::getAppDataLocation();
 #else
     // Sqlite doesn't support content URIs (obviously). So, we make database location unconfigurable on android.

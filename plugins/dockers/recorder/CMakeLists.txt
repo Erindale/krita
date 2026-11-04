@@ -24,7 +24,7 @@ set(KRITA_RECORDERDOCKER_UIS
     recorder_snapshots_manager.ui
 )
 
-if(NOT ANDROID)
+if(NOT KRITA_MOBILE)
     list(APPEND KRITA_RECORDERDOCKER_SOURCES recorder_profile_settings.cpp)
     list(APPEND KRITA_RECORDERDOCKER_UIS recorder_profile_settings.ui)
 endif()

@@ -29,11 +29,58 @@
 
 #include "KisPart.h"
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
 #include "animation/KisMediaEncoderWrapper.h"
-#include <KisAndroidUtils.h>
 #include <QJsonDocument>
 #include <QTemporaryFile>
+#ifdef Q_OS_ANDROID
+#include <KisAndroidUtils.h>
+using KisAndroidUtils::copyFileToTemporary;
+#else
+namespace {
+/**
+ * Copies a file into temporary storage so the encoder gets a plain path.
+ * The Android version (KisAndroidUtils::copyFileToTemporary) also
+ * resolves content:// URIs through Qt's file engine.
+ */
+bool copyFileToTemporary(const QString &inputPath, QTemporaryFile &outputFile, QString *outErrorMessage)
+{
+    QFile inputFile(inputPath);
+    if (!inputFile.open(QIODevice::ReadOnly)) {
+        if (outErrorMessage) {
+            *outErrorMessage = QStringLiteral("failed to open input file '%1': %2").arg(inputPath, inputFile.errorString());
+        }
+        return false;
+    }
+    if (!outputFile.open()) {
+        if (outErrorMessage) {
+            *outErrorMessage = QStringLiteral("failed to open temporary output file: %1").arg(outputFile.errorString());
+        }
+        return false;
+    }
+    while (!inputFile.atEnd()) {
+        const QByteArray chunk = inputFile.read(1 << 20);
+        if (chunk.isEmpty() && inputFile.error() != QFile::NoError) {
+            if (outErrorMessage) {
+                *outErrorMessage = QStringLiteral("failed to read '%1': %2").arg(inputPath, inputFile.errorString());
+            }
+            return false;
+        }
+        if (outputFile.write(chunk) != chunk.size()) {
+            if (outErrorMessage) {
+                *outErrorMessage = QStringLiteral("failed to write temporary file: %1").arg(outputFile.errorString());
+            }
+            return false;
+        }
+    }
+    outputFile.flush();
+    if (outErrorMessage) {
+        outErrorMessage->clear();
+    }
+    return true;
+}
+}
+#endif /* Q_OS_ANDROID */
 #else
 #include "animation/KisFFMpegWrapper.h"
 #endif
@@ -59,7 +106,7 @@ KisImportExportErrorCode KisAnimationVideoSaver::encode(const QString &framesDir
                                                         const QStringList &savedFiles,
                                                         const KisAnimationRenderingOptions &options)
 {
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     Q_UNUSED(savedFilesMask);
 
     KisMediaEncoderFormat *format = KisMediaEncoderWrapper::getFormatByKey(options.videoFormatKey);
@@ -103,7 +150,7 @@ KisImportExportErrorCode KisAnimationVideoSaver::encode(const QString &framesDir
         if (!audioFiles.isEmpty()) {
             QString audioPath = audioFiles.first().filePath();
             QString errorMessage;
-            if (KisAndroidUtils::copyFileToTemporary(audioPath, audioFile, &errorMessage)) {
+            if (copyFileToTemporary(audioPath, audioFile, &errorMessage)) {
                 settings.audioFile = audioFile.fileName();
                 settings.audioSeekFrame = options.firstFrame;
             } else {

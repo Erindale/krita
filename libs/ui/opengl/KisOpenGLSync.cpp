@@ -52,7 +52,7 @@ namespace Sync {
 #endif
             k_glClientWaitSync = (kis_glClientWaitSync)ctx->getProcAddress("glClientWaitSync");
         }
-#elif defined Q_OS_LINUX || defined Q_OS_MACOS
+#elif defined Q_OS_LINUX || defined Q_OS_MACOS || defined Q_OS_IOS
         if (KisOpenGL::supportsFenceSync()) {
             k_glFenceSync  = (kis_glFenceSync)ctx->getProcAddress("glFenceSync");
             k_glGetSynciv  = (kis_glGetSynciv)ctx->getProcAddress("glGetSynciv");

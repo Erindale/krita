@@ -158,11 +158,18 @@ void resetRotation()
 } // namespace
 #endif
 
-#ifdef Q_OS_ANDROID
-extern "C" JNIEXPORT void JNICALL
-Java_org_krita_android_JNIWrappers_saveState(JNIEnv* /*env*/,
-                                             jobject /*obj*/,
-                                             jint    /*n*/)
+#ifdef KRITA_MOBILE
+namespace {
+/**
+ * Mobile systems can kill a backgrounded app at any time, so every
+ * document is autosaved when the app leaves the foreground. Reaching the
+ * background also proves the canvas came up, which clears the "did the
+ * OpenGL canvas crash last time" marker.
+ *
+ * On Android the system calls this through JNI (saveState below); on
+ * other mobile platforms it is driven by QGuiApplication::applicationStateChanged.
+ */
+void autoSaveDocumentsOnPause()
 {
     if (!KisPart::exists()) return;
 
@@ -176,6 +183,17 @@ Java_org_krita_android_JNIWrappers_saveState(JNIEnv* /*env*/,
     const QString configPath = QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation);
     QSettings kritarc(configPath + QStringLiteral("/kritadisplayrc"), QSettings::IniFormat);
     kritarc.setValue("canvasState", "OPENGL_SUCCESS");
+}
+}
+#endif /* KRITA_MOBILE */
+
+#ifdef Q_OS_ANDROID
+extern "C" JNIEXPORT void JNICALL
+Java_org_krita_android_JNIWrappers_saveState(JNIEnv* /*env*/,
+                                             jobject /*obj*/,
+                                             jint    /*n*/)
+{
+    autoSaveDocumentsOnPause();
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
@@ -444,7 +462,7 @@ if (!qEnvironmentVariableIsEmpty("KRITA_OPENGL_DEBUG")) {
         KisOpenGL::setDefaultSurfaceConfig(config);
         KisOpenGL::setDebugSynchronous(openGLDebugSynchronous);
 
-#if defined Q_OS_WIN || defined Q_OS_MACOS
+#if defined Q_OS_WIN || defined Q_OS_MACOS || defined Q_OS_IOS
     qputenv("QT_WIDGETS_RHI", "1");
     qputenv("QT_WIDGETS_RHI_BACKEND", "opengl");
     qputenv("QSG_RHI_BACKEND", "opengl");
@@ -685,8 +703,21 @@ if (!qEnvironmentVariableIsEmpty("KRITA_OPENGL_DEBUG")) {
             KisApplication::setLayoutDirection(Qt::LeftToRight);
         }
     }
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     KisApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
+#endif
+
+#if defined KRITA_MOBILE && !defined Q_OS_ANDROID
+    // Android gets the same from the Java side (saveState); Qt reports
+    // the transition to the background on iOS through the application state.
+    // Files handed over by the system arrive as QFileOpenEvent, which
+    // KisApplication::event() already handles.
+    QObject::connect(&app, &QGuiApplication::applicationStateChanged, &app,
+                     [](Qt::ApplicationState state) {
+                         if (state == Qt::ApplicationInactive || state == Qt::ApplicationSuspended) {
+                             autoSaveDocumentsOnPause();
+                         }
+                     });
 #endif
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0) || defined Q_OS_WIN || defined Q_OS_MACOS

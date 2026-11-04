@@ -110,7 +110,7 @@ if (ANDROID)
     endif()
 endif()
 
-if(APPLE)
+if(MACOS)
     target_link_libraries(kritaglobal PRIVATE
         kritamacosutils
     )

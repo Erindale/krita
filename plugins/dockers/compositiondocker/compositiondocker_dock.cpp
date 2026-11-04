@@ -45,8 +45,8 @@
 #include <kis_time_span.h>
 #include <KisMimeDatabase.h>
 
-#ifdef Q_OS_ANDROID
-#include <animation/KisAndroidMediaEncoderRunnable.h>
+#ifdef KRITA_MOBILE
+#include <animation/KisMediaEncoderWrapper.h>
 #endif
 
 
@@ -342,7 +342,7 @@ void CompositionDockerDock::exportAnimationClicked()
     KisAnimationRenderingOptions exportOptions;
     exportOptions.fromProperties(settings);
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     KisMediaEncoderFormat *format = KisMediaEncoderWrapper::getFormatByKey(exportOptions.videoFormatKey);
     // If there's no format configured, try to grab the first available one.
     if (!format) {
@@ -386,7 +386,7 @@ void CompositionDockerDock::exportAnimationClicked()
         KisLayerCompositionSP currentComposition = toQShared(new KisLayerComposition(image, "temp"));
         currentComposition->store();
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
         const QString videoExtension = format->extension();
 #else
         const QString videoExtension = KisMimeDatabase::suffixesForMimeType(exportOptions.videoMimeType).first();

@@ -32,10 +32,12 @@
 
 #include "kis_debug.h"
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
 #include "animation/KisMediaEncoderFormatPreferencesDialog.h"
 #include "animation/KisMediaEncoderWrapper.h"
+#ifdef Q_OS_ANDROID
 #include <KisAndroidUtils.h>
+#endif
 #else
 #include "animation/KisFFMpegWrapper.h"
 #include "recorder_profile_settings.h"
@@ -51,7 +53,7 @@ enum ExportPageIndex
     PageDone = 2
 };
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
 using Exporter = KisMediaEncoderWrapper;
 #else
 using Exporter = KisFFMpegWrapper;
@@ -85,7 +87,7 @@ public:
     {
     }
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     void checkExporter()
     {
         const QJsonObject ffmpegJson = KisFFMpegWrapper::findFFMpeg(settings->ffmpegPath);
@@ -122,7 +124,7 @@ public:
         {
             QSignalBlocker blocker(ui->comboProfile);
             ui->comboProfile->clear();
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
             const QVector<KisMediaEncoderFormat *> formats = KisMediaEncoderWrapper::getSupportedFormats();
             int count = formats.size();
             if (count == 0) {
@@ -164,7 +166,7 @@ public:
             settings->imageSize.rwidth() &= ~1;
             settings->imageSize.rheight() &= ~1;
         }
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
         // QDir::entryList is mind-bogglingly slow on Android, so we only load
         // this once and cache the result. Not like these are supposed to change
         // while this modal dialog is up anyway.
@@ -176,7 +178,7 @@ public:
 #endif
     }
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     void updateVideoFilePath()
     {
         if (settings->videoDirectory.isEmpty())
@@ -240,7 +242,7 @@ public:
         return false;
     }
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     QStringList splitCommand(const QString &command)
     {
         QStringList args;
@@ -286,7 +288,7 @@ public:
     {
         Q_ASSERT(exporter == nullptr);
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
         // The android export system is robust enough to not need this
         preprocessor->updateSettings(settings->inputDirectory, settings->format);
         preprocessor->doPreprocessing();
@@ -301,7 +303,7 @@ public:
         QObject::connect(exporter.data(), SIGNAL(sigFinishedWithError(QString)), q, SLOT(onExporterFinishedWithError(QString)));
         QObject::connect(exporter.data(), SIGNAL(sigProgressUpdated(int)), q, SLOT(onExporterProgressUpdated(int)));
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
         KisMediaEncoderWrapperSettings exporterSettings = {
             settings->videoFilePath,
             settings->inputFilePaths,
@@ -342,7 +344,7 @@ public:
         }
     }
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     QString applyVariables(const QString &templateArguments)
     {
         const QSize &outSize = settings->resize ? settings->size : settings->imageSize;
@@ -473,7 +475,7 @@ RecorderExport::RecorderExport(RecorderExportSettings *s, QWidget *parent)
 {
     d->ui->setupUi(this);
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     d->ui->labelFfmpegLocation->hide();
     d->ui->editFfmpegPath->hide();
     d->ui->buttonBrowseFfmpeg->hide();
@@ -526,7 +528,7 @@ RecorderExport::RecorderExport(RecorderExportSettings *s, QWidget *parent)
     connect(d->ui->resultPreviewCheckBox, SIGNAL(toggled(bool)), d->ui->spinFirstFrameSec, SLOT(setEnabled(bool)));
     connect(d->ui->extendResultCheckBox, SIGNAL(toggled(bool)), d->ui->spinLastFrameSec, SLOT(setEnabled(bool)));
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     connect(d->ui->buttonBrowseFfmpeg, SIGNAL(clicked()), SLOT(onButtonBrowseFfmpegClicked()));
     connect(d->ui->buttonBrowseExport, SIGNAL(clicked()), SLOT(onButtonBrowseExportClicked()));
     connect(d->ui->editVideoFilePath, SIGNAL(textChanged(QString)), SLOT(onEditVideoPathChanged(QString)));
@@ -593,7 +595,7 @@ void RecorderExport::setup()
     d->ui->buttonLockFps->setChecked(settings->lockFps);
     d->ui->buttonLockFps->setIcon(settings->lockFps ? KisIconUtils::loadIcon("locked") : KisIconUtils::loadIcon("unlocked"));
     d->fillComboProfiles();
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     d->checkExporter();
     d->updateVideoFilePath();
 #endif
@@ -725,7 +727,7 @@ void RecorderExport::onButtonLockFpsToggled(bool checked)
     d->updateWarningVisibility();
 }
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
 void RecorderExport::onButtonBrowseFfmpegClicked()
 {
     KoFileDialog dialog(this, KoFileDialog::OpenFile, "SelectFFmpeg");
@@ -742,7 +744,7 @@ void RecorderExport::onButtonBrowseFfmpegClicked()
 
 void RecorderExport::onComboProfileIndexChanged(int index)
 {
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     QString format = d->ui->comboProfile->itemData(index).toString();
     d->settings->selectedFormat = format;
     RecorderExportConfig(false).setSelectedFormat(format);
@@ -755,7 +757,7 @@ void RecorderExport::onComboProfileIndexChanged(int index)
 
 void RecorderExport::onButtonEditProfileClicked()
 {
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     QString key = settings->selectedFormat;
     KisMediaEncoderFormat *format = KisMediaEncoderWrapper::getFormatByKey(key);
     KIS_SAFE_ASSERT_RECOVER_RETURN(format);
@@ -782,7 +784,7 @@ void RecorderExport::onButtonEditProfileClicked()
 #endif
 }
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
 void RecorderExport::onEditVideoPathChanged(const QString &videoFilePath)
 {
     QFileInfo fileInfo(videoFilePath);
@@ -792,7 +794,7 @@ void RecorderExport::onEditVideoPathChanged(const QString &videoFilePath)
 }
 #endif
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
 void RecorderExport::onButtonBrowseExportClicked()
 {
     QString videoFileName = d->requestFile(settings->profiles[settings->profileIndex].extension, settings->videoDirectory);
@@ -813,7 +815,7 @@ void RecorderExport::onButtonExportClicked()
         return;
     }
 
-#ifdef Q_OS_ANDROID
+#ifdef KRITA_MOBILE
     KisMediaEncoderFormat *format = KisMediaEncoderWrapper::getFormatByKey(settings->selectedFormat);
     KIS_SAFE_ASSERT_RECOVER_RETURN(format);
     settings->videoFilePath = d->requestFile(format->extension());
@@ -880,7 +882,7 @@ void RecorderExport::onButtonWatchItClicked()
     Private::desktopServicesOpenPath(settings->videoFilePath);
 }
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
 void RecorderExport::onButtonShowInFolderClicked()
 {
     Private::desktopServicesOpenPath(settings->videoDirectory);
@@ -920,7 +922,7 @@ void RecorderExport::onCleanUpFinished()
     d->ui->buttonRemoveSnapshots->hide();
 }
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
 bool RecorderExport::eventFilter(QObject *obj, QEvent *event)
 {
     if (obj == d->ui->editVideoFilePath && event->type() == QEvent::FocusOut)
