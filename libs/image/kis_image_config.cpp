@@ -194,8 +194,16 @@ int KisImageConfig::poolLimit() const
 
 qreal KisImageConfig::memoryHardLimitPercent(bool requestDefault) const
 {
+#ifdef Q_OS_IOS
+    // iPadOS terminates apps that use more than a few GB (jetsam); the
+    // limit is not documented and is lower than physical RAM. Start
+    // conservatively, tune on a device.
+    const qreal defaultHardLimit = 30.;
+#else
+    const qreal defaultHardLimit = 50.;
+#endif
     return !requestDefault ?
-        m_config.readEntry("memoryHardLimitPercent", 50.) : 50.;
+        m_config.readEntry("memoryHardLimitPercent", defaultHardLimit) : defaultHardLimit;
 }
 
 void KisImageConfig::setMemoryHardLimitPercent(qreal value)
@@ -417,7 +425,7 @@ void KisImageConfig::setAutoKeyModeDuplicate(bool value)
 #include <sys/sysctl.h>
 #elif defined Q_OS_WIN
 #include <windows.h>
-#elif defined Q_OS_MACOS
+#elif defined Q_OS_MACOS || defined Q_OS_IOS
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #endif
@@ -468,7 +476,7 @@ int KisImageConfig::totalRAM()
 #   if defined ENV32BIT
     totalMemory = qMin(totalMemory, 2000);
 #   endif
-#elif defined Q_OS_MACOS
+#elif defined Q_OS_MACOS || defined Q_OS_IOS
     int mib[2] = { CTL_HW, HW_MEMSIZE };
     u_int namelen = sizeof(mib) / sizeof(mib[0]);
     uint64_t size;

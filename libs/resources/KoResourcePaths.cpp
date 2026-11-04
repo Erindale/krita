@@ -142,6 +142,10 @@ QString getInstallationPrefix() {
     return bundlePath;
 #elif defined(Q_OS_HAIKU)
 	return qApp->applicationDirPath() + "/";
+#elif defined(Q_OS_IOS)
+    // An iOS .app is flat: the executable and the share/ directory with
+    // Krita's data both sit at the bundle root (unverified on a device)
+    return qApp->applicationDirPath() + "/";
 #elif defined(Q_OS_ANDROID)
     // qApp->applicationDirPath() isn't writable and android system won't allow
     // any files other than libraries
@@ -151,6 +155,20 @@ QString getInstallationPrefix() {
     return qApp->applicationDirPath() + "/../";
 #endif
 }
+
+#ifdef Q_OS_IOS
+/**
+ * On iOS the user's resources live in the app's Documents directory, which
+ * the Files app shows when UIFileSharingEnabled is set, so .bundle files
+ * can be dropped in. The location saved in the config is ignored: the
+ * app container path changes when the app is reinstalled. The resource
+ * database stays in AppDataLocation (KisApplication::registerResources).
+ */
+QString iosResourceLocation()
+{
+    return QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + "/Resources";
+}
+#endif
 
 }
 
@@ -226,7 +244,11 @@ QString KoResourcePaths::getAppDataLocation()
     QString path;
 
     KConfigGroup cfg(KSharedConfig::openConfig(), "");
+#ifdef Q_OS_IOS
+    path = iosResourceLocation();
+#else
     path = cfg.readEntry(KisResourceLocator::resourceLocationKey, QStandardPaths::writableLocation(QStandardPaths::AppDataLocation));
+#endif
 
     QFileInfo fi(path);
 
@@ -688,8 +710,12 @@ QString KoResourcePaths::saveLocationInternal(const QString &type, const QString
     const QStandardPaths::StandardLocation location = d->mapTypeToQStandardPaths(type);
 
     if (location == QStandardPaths::AppDataLocation) {
+#ifdef Q_OS_IOS
+        path = iosResourceLocation();
+#else
         KConfigGroup cfg(KSharedConfig::openConfig(), "");
         path = cfg.readEntry(KisResourceLocator::resourceLocationKey, "");
+#endif
     }
 
     if (path.isEmpty()) {
@@ -697,7 +723,7 @@ QString KoResourcePaths::saveLocationInternal(const QString &type, const QString
         useStandardLocation = true;
     }
 
-#ifndef Q_OS_ANDROID
+#ifndef KRITA_MOBILE
     // on Android almost all config locations we save to are app specific,
     // and don't end with "krita".
     if (!path.endsWith("krita") && useStandardLocation) {
