@@ -11,7 +11,7 @@ Drafts for the parts of the iPadOS port that can only be verified with Xcode. No
 | `deps/ios-toolchain-krita.cmake` | `krita-deps-management/tools/` | The same for Krita itself: pre-seeded `try_run` results, `KRITA_STATIC_BUILD`, no updaters/Python/MLT |
 | `deps/ext_qt-ios-branch.cmake` | spliced into `krita-deps-management/ext_qt/CMakeLists.txt` (branch `transition.now/qt6`) before its `else( APPLE )` branch | Static Qt 6 for iOS with macOS host tools, following the Android branch |
 | `deps/deps-ios.yml` | appended to `krita-deps-management/latest/krita-deps.yml` | The iOS platform block |
-| `PHASE2_QT_BRIEF.md` | pasted into Claude Code on the Mac | The brief for the next step: static Qt 6 for iOS, proven on the simulator |
+| `../../IOS_PORT_PLAN.md` | read first on the Mac | The whole plan, with the Phase 2 brief to paste into Claude Code |
 
 ## Build outline (Mac)
 
