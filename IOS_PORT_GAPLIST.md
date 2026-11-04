@@ -1349,6 +1349,25 @@ Each step is meant to be one commit. **Done** means committed on this branch and
 | 19 | Native file access: `UIDocumentPickerViewController` behind `KoFileDialog`; security-scoped bookmarks for recent files (template: `libs/macosutils/KisMacosSecurityBookmarkManager.mm`); "outside app container" predicate replacing `startsWith("content://")` | `libs/widgetutils/KoFileDialog.cpp:217/:266/:311`, `KisRecentFilesManager_p.h:42/:108`, `KisDocument.cpp:1910` | Mac (later: Phase 6 only needs the Documents folder, step 16) |
 | 20 | In-process libav encoder on all mobile platforms, `KisAndroidMediaEncoderRunnable` Android-only | `libs/ui/CMakeLists.txt` | **Done** as part of step 7: the encoder, its preferences dialog and the wrapper build under `KRITA_MOBILE` (LibAV required there); compiled on Linux. Only the MediaCodec runnable stays Android-only |
 
+### Mobile code paths on Linux
+
+`KRITA_SIMULATE_MOBILE=ON` defines `KRITA_MOBILE` on a desktop platform, so the code Android and iOS share can be compiled and run here. It is a test configuration only (desktop GL Qt, no file picker integration, `windowlayouts` left out of the install like Android):
+
+```bash
+cmake -G Ninja <krita-src> -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DKRITA_SIMULATE_MOBILE=ON
+ninja krita kritarecorderdocker kritacompositiondocker kritaresourcemanager krita_tool_svgtext
+```
+
+It needs the ffmpeg development libraries (`pkg-config libavcodec libavfilter libavformat libavutil libswscale`), because the in-process encoder is required on mobile. Result on Ubuntu 24.04:
+
+- `krita`, every library and the four plugins with mobile code compile and link; the shared build is unchanged.
+- One real defect: the libav encoder used `av_err2str()`, a C99 compound literal that clang accepts in C++ and GCC does not. Fixed in `cdab968`. Everything else in the 150 switched sites compiled as it does on Android.
+- Exporting a raster-only `.kra` to PNG with the simulated-mobile binary gives a file identical to the desktop build's, three runs out of three, so the mobile save path (temp file, then copy into place) works.
+- Exporting the comics template, which has a vector layer, crashes on exit every time in the simulated build (`KisShapeLayerCanvas::repaint()` still running on a worker thread while the application is torn down), and writes a PNG without the vector content. The desktop build has the same crash about one run in three, so this is a pre-existing race that the mobile save path makes more likely; it is not investigated. Check animation and vector export on the device.
+- Loading a multi-window `windowlayouts` resource shows a modal dialog under `KRITA_MOBILE`; a headless run hangs there. Mobile installs do not ship those files.
+
+Not covered: `QT_OPENGL_ES_3` (tied to `ANDROID OR IOS`, not to `KRITA_MOBILE`), the Android-only JNI code, and any `Q_OS_IOS` branch.
+
 ### Static Linux build
 
 The static build runs on Linux with Qt 5.15 and KF5 from Ubuntu 24.04:
