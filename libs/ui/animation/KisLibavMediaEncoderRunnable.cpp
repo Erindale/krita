@@ -25,6 +25,18 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
+namespace {
+/**
+ * av_err2str() is a C99 compound literal, which GCC rejects in C++
+ */
+QString avErrorString(int err)
+{
+    char buf[AV_ERROR_MAX_STRING_SIZE] = {0};
+    av_strerror(err, buf, sizeof(buf));
+    return QString::fromUtf8(buf);
+}
+}
+
 #include "KisLibavEncoderContext.h"
 
 namespace KisLibav
@@ -250,7 +262,7 @@ private:
     {
         int result = av_opt_set(obj, name, value, AV_OPT_SEARCH_CHILDREN);
         if (result != 0) {
-            warnFile.nospace() << "Error setting option " << name << " to " << value << ": " << av_err2str(result)
+            warnFile.nospace() << "Error setting option " << name << " to " << value << ": " << avErrorString(result)
                                << " (" << result << ")";
         }
     }
@@ -835,7 +847,7 @@ private:
     void setInternalErrorMessageAv(const QString &detail, int err)
     {
         setInternalErrorMessage(
-            QStringLiteral("%1: %2 (%3)").arg(detail).arg(QString::fromUtf8(av_err2str(err))).arg(err));
+            QStringLiteral("%1: %2 (%3)").arg(detail).arg(avErrorString(err)).arg(err));
     }
 
     static int writeAvioPacket(void *opaque, KisLibav::WriteAvioPacketBuf buf, int bufSize)
