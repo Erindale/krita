@@ -69,6 +69,12 @@ struct MyPaintSensorData : boost::equality_comparable<MyPaintSensorData>
     MyPaintSensorDataWithRange sensorCustom;
 };
 
+/**
+ * Registers the MyPaint sensor factories in KisDynamicSensorFactoryRegistry.
+ * Safe to call more than once.
+ */
+void registerMyPaintSensorFactories();
+
 class MyPaintSensorPack : public KisSensorPackInterface
 {
 public:

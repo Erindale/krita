@@ -22,9 +22,12 @@
 #include <QJsonObject>
 #include <KisStaticInitializer.h>
 
+#include <mutex>
+
 namespace detail {
 
-KIS_DECLARE_STATIC_INITIALIZER {
+void registerSensorFactories()
+{
     auto addFactory = [](const KoID &id,
                          int minimumValue,
                          int maximumValue,
@@ -50,6 +53,19 @@ KIS_DECLARE_STATIC_INITIALIZER {
     addFactory(MyPaintCustomId, -20, 20, "", "", i18n("%"));
 }
 
+#ifndef KRITA_STATIC_PLUGINS
+/**
+ * In a shared build this runs when the plugin library is loaded, which
+ * also covers unit tests that link the plugin's code without loading the
+ * plugin. In a static build it would run before main(), before
+ * translations are set up, so there only the plugin constructor registers
+ * the factories.
+ */
+KIS_DECLARE_STATIC_INITIALIZER {
+    registerMyPaintSensorFactories();
+}
+#endif
+
 template <typename Data,
           typename SensorData =
               std::copy_const_t<Data,
@@ -74,6 +90,12 @@ inline std::vector<SensorData*> sensors(Data *data)
 }
 
 } // namespace detail
+
+void registerMyPaintSensorFactories()
+{
+    static std::once_flag registered;
+    std::call_once(registered, &detail::registerSensorFactories);
+}
 
 MyPaintSensorDataWithRange::MyPaintSensorDataWithRange(const KoID &id)
     : KisSensorData(id)

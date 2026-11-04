@@ -21,6 +21,7 @@
 #include "MyPaintPaintOpPreset.h"
 #include "MyPaintPaintOpSettings.h"
 #include "MyPaintPaintOpSettingsWidget.h"
+#include "MyPaintSensorPack.h"
 
 K_PLUGIN_FACTORY_WITH_JSON(MyPaintOpPluginFactory, "kritamypaintop.json", registerPlugin<MyPaintOpPlugin>();)
 
@@ -28,6 +29,8 @@ K_PLUGIN_FACTORY_WITH_JSON(MyPaintOpPluginFactory, "kritamypaintop.json", regist
 MyPaintOpPlugin::MyPaintOpPlugin(QObject *parent, const QVariantList &)
     : QObject(parent)
 {
+    registerMyPaintSensorFactories();
+
     KisResourceLoaderRegistry::instance()->registerLoader(new KisResourceLoader<KisMyPaintPaintOpPreset>(ResourceSubType::MyPaintPaintOpPresets, ResourceType::PaintOpPresets
                                                                                                          , i18n("MyPaint Brush Presets")
                                                                                                          , QStringList() << "application/x-mypaint-brush"));
