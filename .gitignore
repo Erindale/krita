@@ -51,3 +51,7 @@ _packaging
 env
 env_deactivate
 krita-deps-management/
+
+# written into the source tree by ECM 5.x ecm_finalize_qml_module() in
+# static builds (it uses an unset variable for the output path)
+/qmlmodules/components/_init.cpp

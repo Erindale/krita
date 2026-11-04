@@ -218,6 +218,11 @@ if(HAVE_KCRASH)
     target_link_libraries(krita PRIVATE KF${KF_MAJOR}::Crash)
 endif()
 
+if (KRITA_STATIC_BUILD)
+    # all libraries, plugins and their Q_IMPORT_PLUGIN registry
+    kis_static_build_link_into(krita)
+endif()
+
 if (APPLE)
     set(KRITA_VERSION_NUMBER_STRING "${KRITA_STABLE_VERSION_MAJOR}.${KRITA_STABLE_VERSION_MINOR}.${KRITA_VERSION_RELEASE}")
     set_target_properties(krita PROPERTIES INSTALL_RPATH "@loader_path/../../../../lib;@loader_path/../lib;

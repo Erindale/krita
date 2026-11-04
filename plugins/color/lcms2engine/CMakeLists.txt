@@ -80,11 +80,19 @@ endif ()
 
 
 kis_add_library(kritalcmsengine_static STATIC ${lcmsengine_SRCS})
-kis_add_library(kritalcmsengine MODULE ${lcmsengine_SRCS})
 generate_export_header(kritalcmsengine_static BASE_NAME kritalcmsengine)
 
 target_link_libraries(kritalcmsengine_static kritapigment kritawidgetutils KF${KF_MAJOR}::I18n KF${KF_MAJOR}::CoreAddons ${LCMS2_LIBRARIES} ${LINK_OPENEXR_LIB})
 
-target_link_libraries(kritalcmsengine PRIVATE kritalcmsengine_static)
-install(TARGETS kritalcmsengine DESTINATION ${KRITA_PLUGIN_INSTALL_DIR})
+if (KRITA_STATIC_BUILD)
+    # The module would compile the same sources again, and both copies
+    # would end up in the executable; the archive already is the plugin.
+    add_library(kritalcmsengine INTERFACE)
+    target_link_libraries(kritalcmsengine INTERFACE kritalcmsengine_static)
+    kis_static_build_register_library(kritalcmsengine IS_PLUGIN)
+else()
+    kis_add_library(kritalcmsengine MODULE ${lcmsengine_SRCS})
+    target_link_libraries(kritalcmsengine PRIVATE kritalcmsengine_static)
+    install(TARGETS kritalcmsengine DESTINATION ${KRITA_PLUGIN_INSTALL_DIR})
+endif()
 

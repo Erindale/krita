@@ -506,6 +506,27 @@ include(KDEInstallDirs)
 
 include(KDECMakeSettings)
 
+# Link libraries and plugins into one executable instead of loading them
+# at runtime. Required on iOS; works on other platforms for testing.
+# See cmake/modules/KritaStaticBuild.cmake.
+if (CMAKE_SYSTEM_NAME STREQUAL "iOS")
+    set(_krita_static_build_default ON)
+else()
+    set(_krita_static_build_default OFF)
+endif()
+option(KRITA_STATIC_BUILD "Link all Krita libraries and plugins statically into the executable" ${_krita_static_build_default})
+add_feature_info("Static build" KRITA_STATIC_BUILD "Link libraries and plugins into the executable")
+
+if (KRITA_STATIC_BUILD)
+    include(KritaStaticBuild)
+    # QT_STATICPLUGIN makes moc emit static plugin entry points for every
+    # Q_PLUGIN_METADATA class; KRITA_STATIC_PLUGINS makes KoJsonTrader use
+    # only those instead of scanning a plugin directory
+    add_compile_definitions(QT_STATICPLUGIN KRITA_STATIC_PLUGINS)
+    # for add_library() calls with no type, including ECM's QML modules
+    set(BUILD_SHARED_LIBS OFF)
+endif()
+
 if (WIN32)
 
 # Qt6 targets Windows10, so we shouldn't change it in any way
@@ -1077,7 +1098,14 @@ macro(kis_add_library)
     # the first run strips only options specific to kis_add_library
     # to create arguments for real add_library call
     cmake_parse_arguments(REAL "" PCH_FILE "" ${ARGV} )
+    if (KRITA_STATIC_BUILD)
+        set(_kis_static_original_args ${REAL_UNPARSED_ARGUMENTS})
+        kis_static_build_adjust_library_args(REAL_UNPARSED_ARGUMENTS)
+    endif()
     add_library(${REAL_UNPARSED_ARGUMENTS})
+    if (KRITA_STATIC_BUILD)
+        kis_static_build_register_add_library_call("${_kis_static_original_args}")
+    endif()
 
     if (KRITA_ENABLE_PCH)
         # the second run strips out all the option supported by the function
