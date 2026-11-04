@@ -3,12 +3,10 @@ set(kritalevelfilter_SOURCES
     KisLevelsFilter.cpp
     KisLevelsConfigWidget.cpp
     KisLevelsFilterConfiguration.cpp
-    ../colorsfilters/kis_multichannel_utils.cpp
-    ../colorsfilters/virtual_channel_info.cpp
     )
 ki18n_wrap_ui(kritalevelfilter_SOURCES
     KisLevelsConfigWidget.ui
     )
 kis_add_library(kritalevelfilter MODULE ${kritalevelfilter_SOURCES})
-target_link_libraries(kritalevelfilter kritaui)
+target_link_libraries(kritalevelfilter kritaui kritamultichannelcommon)
 install(TARGETS kritalevelfilter  DESTINATION ${KRITA_PLUGIN_INSTALL_DIR})

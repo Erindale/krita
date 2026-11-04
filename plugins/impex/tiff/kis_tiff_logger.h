@@ -15,7 +15,7 @@
 
 #include <kis_debug.h>
 
-QString formatVarArgs(const char *fmt, va_list args)
+inline QString formatVarArgs(const char *fmt, va_list args)
 {
     int size = 4096;
     QByteArray buf(size, 0);
@@ -43,14 +43,14 @@ QString formatVarArgs(const char *fmt, va_list args)
     }
 }
 
-void KisTiffErrorHandler(const char *module, const char *fmt, va_list args)
+inline void KisTiffErrorHandler(const char *module, const char *fmt, va_list args)
 {
     QString msg("%1: %2");
 
     errFile << msg.arg(module, formatVarArgs(fmt, args));
 }
 
-void KisTiffWarningHandler(const char *module, const char *fmt, va_list args)
+inline void KisTiffWarningHandler(const char *module, const char *fmt, va_list args)
 {
     QString msg("%1: %2");
 
