@@ -9,12 +9,12 @@
 #include <QObject>
 #include <QVariantList>
 
-class Plugin : public QObject
+class DefaultToolPlugin : public QObject
 {
     Q_OBJECT
 
 public:
-    Plugin(QObject *parent, const QVariantList &);
-    ~Plugin() override {}
+    DefaultToolPlugin(QObject *parent, const QVariantList &);
+    ~DefaultToolPlugin() override {}
 };
 #endif

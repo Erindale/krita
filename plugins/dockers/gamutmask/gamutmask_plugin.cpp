@@ -12,7 +12,7 @@
 #include <KoDockFactoryBase.h>
 #include <KoDockRegistry.h>
 
-K_PLUGIN_FACTORY_WITH_JSON(PaletteDockPluginFactory, "krita_gamutmask.json", registerPlugin<GamutMaskPlugin>();)
+K_PLUGIN_FACTORY_WITH_JSON(GamutMaskPluginFactory, "krita_gamutmask.json", registerPlugin<GamutMaskPlugin>();)
 
 class GamutMaskDockFactory: public KoDockFactoryBase
 {

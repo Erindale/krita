@@ -14,7 +14,7 @@
 
 #include "kis_xmp_io.h"
 
-K_PLUGIN_FACTORY_WITH_JSON(KisIptcIOPluginFactory, "kritaxmp.json", registerPlugin<KisXmpPlugin>();)
+K_PLUGIN_FACTORY_WITH_JSON(KisXmpPluginFactory, "kritaxmp.json", registerPlugin<KisXmpPlugin>();)
 
 KisXmpPlugin::KisXmpPlugin(QObject *parent, const QVariantList &)
     : QObject(parent)

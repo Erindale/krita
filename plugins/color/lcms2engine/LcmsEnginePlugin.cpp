@@ -71,7 +71,7 @@ void lcms2LogErrorHandlerFunction(cmsContext /*ContextID*/, cmsUInt32Number Erro
     errorPigment << "Lcms2 error: " << ErrorCode << Text;
 }
 
-K_PLUGIN_FACTORY_WITH_JSON(PluginFactory, "kolcmsengine.json", registerPlugin<LcmsEnginePlugin>();)
+K_PLUGIN_FACTORY_WITH_JSON(LcmsEnginePluginFactory, "kolcmsengine.json", registerPlugin<LcmsEnginePlugin>();)
 
 LcmsEnginePlugin::LcmsEnginePlugin(QObject *parent, const QVariantList &)
     : QObject(parent)

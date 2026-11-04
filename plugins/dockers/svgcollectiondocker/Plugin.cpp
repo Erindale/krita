@@ -11,9 +11,9 @@
 
 #include <kpluginfactory.h>
 
-K_PLUGIN_FACTORY_WITH_JSON(PluginFactory, "svgcollectiondocker.json", registerPlugin<Plugin>();)
+K_PLUGIN_FACTORY_WITH_JSON(SvgCollectionDockerPluginFactory, "svgcollectiondocker.json", registerPlugin<SvgCollectionDockerPlugin>();)
 
-Plugin::Plugin(QObject *parent, const QVariantList &)
+SvgCollectionDockerPlugin::SvgCollectionDockerPlugin(QObject *parent, const QVariantList &)
     : QObject(parent)
 {
     KoDockRegistry::instance()->add(new SvgSymbolCollectionDockerFactory());

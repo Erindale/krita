@@ -9,13 +9,13 @@
 #include <QObject>
 #include <QVariantList>
 
-class Plugin : public QObject
+class SvgCollectionDockerPlugin : public QObject
 {
     Q_OBJECT
 
 public:
-    Plugin(QObject *parent, const QVariantList &);
-    ~Plugin() override {}
+    SvgCollectionDockerPlugin(QObject *parent, const QVariantList &);
+    ~SvgCollectionDockerPlugin() override {}
 };
 
 #endif

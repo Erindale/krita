@@ -11,13 +11,13 @@
 #include <QObject>
 #include <QVariantList>
 
-class Plugin : public QObject
+class SvgTextToolPlugin : public QObject
 {
     Q_OBJECT
 
 public:
-    Plugin(QObject *parent, const QVariantList &);
-    ~Plugin() {}
+    SvgTextToolPlugin(QObject *parent, const QVariantList &);
+    ~SvgTextToolPlugin() {}
 };
 
 #endif
