@@ -1,0 +1,18 @@
+# iOS entry for latest/krita-deps.yml in krita-deps-management.
+#
+# Platform strings are matched by prefix, so 'iOS' covers iOS/arm64 and
+# iOS/simulator. Everything in the '@all' block applies to iOS as well; this
+# block only adds what the other platforms get from their own blocks. Recipes
+# excluded from Android for the same reasons (iconv, lzma, ocio, vpl,
+# libraw, kdcraw, python, sip, pyqt*, poppler, pkgconfig, meson,
+# python-modules, kcrash, fcitx-qt, appimagetool, linuxdeployqt) need an
+# 'iOS' entry in their exclusion lists too, or a `'on': [...]` that leaves
+# iOS out.
+#
+# Unverified: no dependency has been built for iOS yet.
+
+- 'on': ['iOS']
+  'require':
+    "base/zlib": "master"
+    "base/gettext": "master"
+    "base/libintl-lite": "master"
