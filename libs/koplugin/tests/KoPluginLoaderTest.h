@@ -21,6 +21,8 @@ private Q_SLOTS:
 
     void testLoadAll_data();
     void testLoadAll();
+
+    void testLoadStaticPlugin();
 };
 
 #endif // KO_PLUGIN_LOADER_TEST_H

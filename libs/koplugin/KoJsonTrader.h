@@ -12,6 +12,8 @@
 #include <QString>
 #include <QMutex>
 #include <QSharedPointer>
+#include <QJsonObject>
+#include <QtPlugin>
 #include <kis_pointer_utils.h>
 #include "kritaplugin_export.h"
 
@@ -34,6 +36,11 @@ public:
     struct KRITAPLUGIN_EXPORT Plugin {
         Plugin() = default;
         Plugin(QSharedPointer<QPluginLoader> loader, QMutex *mutex);
+        /**
+         * A plugin linked into the executable and registered with
+         * Q_IMPORT_PLUGIN (see QPluginLoader::staticPlugins())
+         */
+        Plugin(QtPluginInstanceFunction staticInstance, const QJsonObject &staticMetaData, QMutex *mutex);
         ~Plugin();
 
         QObject *instance() const;
@@ -44,6 +51,8 @@ public:
 
     private:
         QSharedPointer<QPluginLoader> m_loader;
+        QtPluginInstanceFunction m_staticInstance = nullptr;
+        QJsonObject m_staticMetaData;
         QMutex *m_mutex = 0;
     };
 
@@ -62,6 +71,11 @@ public:
      * together in a single folder here. Another solution might be to construct
      * several QPluginLoaders.
      *
+     * Plugins linked statically into the executable and registered with
+     * Q_IMPORT_PLUGIN are always included as well. When Krita is built with
+     * KRITA_STATIC_PLUGINS defined (e.g. on iOS), they are the only source
+     * of plugins and no directory is searched.
+     *
      * @param servicetype A service type like 'KMyApp/Plugin' or 'KFilePlugin'.
      * @param mimetype    A MimeType to constrain the search.
      *
@@ -75,6 +89,7 @@ public:
 
 private:
      void initializePluginLoaderCache();
+     void initializeStaticPluginCache();
 
 private:
      QString m_pluginPath;

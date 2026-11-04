@@ -6,7 +6,13 @@
 
 #include "KoPluginLoaderTest.h"
 #include "KoPluginLoader.h"
+#include "KoJsonTrader.h"
 #include <QTest>
+#include <QJsonObject>
+#include <QtPlugin>
+
+// see kritadummyplugin_static in CMakeLists.txt
+Q_IMPORT_PLUGIN(DummyPluginFactory)
 
 #include <kpluginfactory.h>
 #include <DummyTrivialInterface.h>
@@ -114,6 +120,36 @@ void KoPluginLoaderTest::testLoadAll()
 
 
     QCOMPARE(childrenIds, expectedIds);
+}
+
+void KoPluginLoaderTest::testLoadStaticPlugin()
+{
+    const QList<KoJsonTrader::Plugin> plugins =
+        KoJsonTrader::instance()->query("Krita/DummyStaticPlugin", QString());
+    QCOMPARE(plugins.size(), 1);
+    QCOMPARE(plugins.first().fileName(), QString("static:DummyPluginFactory"));
+    QCOMPARE(plugins.first().metaData().value("MetaData").toObject().value("Id").toString(),
+             QString("dummypluginstatic"));
+
+    KoPluginLoader *loader = KoPluginLoader::instance();
+
+    KPluginFactory *factory = loader->loadSinglePlugin("dummypluginstatic", "Krita/DummyStaticPlugin");
+    QVERIFY(factory);
+
+    std::unique_ptr<DummyTrivialInterface> plugin(factory->create<DummyTrivialInterface>());
+    QVERIFY(plugin);
+
+    QCOMPARE(plugin->name(), QString("dummypluginstatic"));
+    QCOMPARE(plugin->version(), 4);
+
+    // static plugins must not leak into queries for other service types
+    std::unique_ptr<QObject> parent(new QObject);
+    loader->load("Krita/DummyPlugin", KoPluginLoader::PluginsConfig(), parent.get(), false);
+    for (QObject *obj : parent->children()) {
+        DummyTrivialInterface *iface = qobject_cast<DummyTrivialInterface*>(obj);
+        QVERIFY(iface);
+        QVERIFY(iface->name() != "dummypluginstatic");
+    }
 }
 
 QTEST_GUILESS_MAIN(KoPluginLoaderTest)

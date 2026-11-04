@@ -35,10 +35,29 @@ add_dummy_plugin(kritadummyplugin2 "dummyplugin2" 1 "dummyplugin2.json")
 add_dummy_plugin(kritadummyplugin2_ver2 "dummyplugin2" 2 "dummyplugin2_ver2.json")
 add_dummy_plugin(kritadummyplugin3 "dummyplugin3" 3 "dummyplugin3_ver_as_int.json")
 
+# A plugin linked into the test executable and registered with
+# Q_IMPORT_PLUGIN, the way all plugins are loaded on platforms
+# without dynamic loading (iOS)
+kis_add_library(kritadummyplugin_static STATIC DummyPlugin.cpp)
+target_compile_definitions(kritadummyplugin_static
+    PRIVATE
+    QT_STATICPLUGIN
+    DUMMY_PLUGIN_ID="dummypluginstatic"
+    DUMMY_PLUGIN_VERSION=4
+    DUMMY_PLUGIN_JSON_FILE="dummyplugin_static.json"
+    )
+target_link_libraries(kritadummyplugin_static
+    PRIVATE
+        Qt::Core
+        kritaglobal
+        KF${KF_MAJOR}::CoreAddons
+        dummytrivialinterface
+)
+
 kis_add_test(
     KoPluginLoaderTest.cpp
     TEST_NAME KoPluginLoaderTest
-    LINK_LIBRARIES kritaplugin kritaglobal kritatestsdk KF${KF_MAJOR}::CoreAddons KF${KF_MAJOR}::ConfigCore dummytrivialinterface
+    LINK_LIBRARIES kritaplugin kritaglobal kritatestsdk KF${KF_MAJOR}::CoreAddons KF${KF_MAJOR}::ConfigCore dummytrivialinterface kritadummyplugin_static
 )
 
 target_compile_definitions(KoPluginLoaderTest
