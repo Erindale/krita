@@ -27,6 +27,10 @@ set(KRITA_STATIC_PLUGINS_ALLOWLIST_DEFAULT
     kritaselectiontools
     kritatooltransform
     krita_flaketools
+    # vector shapes; text rendering looks up "ImageShape" and
+    # "RectangleShape" in KoShapeRegistry and crashes without them
+    krita_shape_image
+    krita_shape_paths
     # file formats
     kritakraimport
     kritakraexport
