@@ -1329,15 +1329,15 @@ Each step is meant to be one commit. **Done** means committed on this branch and
 | 1 | Use `Q_OS_MACOS` instead of `Q_OS_MAC` where the code is macOS-only. Fixes the unbalanced brace on iOS, the doubled touch and Pencil mouse events, and the ColorSync scan. | `libs/ui/input/kis_input_manager.cpp:684`, `libs/ui/input/KisInputEventsEater.cpp:271`, `plugins/color/lcms2engine/LcmsEnginePlugin.cpp:98` | **Done** (`45bb0b2`) |
 | 2 | Give every plugin factory (26 renamed), `Plugin` class (3) and `.qrc` (1) a unique name, so plugins can be linked into one binary | `plugins/**` | **Done** (`9882099`) |
 | 3 | `KoJsonTrader` also loads `Q_IMPORT_PLUGIN`'d plugins (IID `org.kde.KPluginFactory`); `KRITA_STATIC_PLUGINS` skips the directory scan. New static case in `KoPluginLoaderTest`. | `libs/koplugin/` | **Done** (`107eff4`); `KoPluginLoaderTest` 9/9 pass |
-| 4 | Rename the second `KisColorSelector` (artistic colour selector), which clashes with the advanced colour selector's class of the same name | `plugins/dockers/artisticcolorselector/kis_color_selector.h:26` | Linux-safe |
-| 5 | Move plugin-scope `KIS_DECLARE_STATIC_INITIALIZER` bodies that use `i18n()` or registries into the plugin constructors, so they don't run before `main()` once linked statically | `plugins/paintops/mypaint/MyPaintSensorPack.cpp:27` and the 6 others in section 4.5 (b) | Linux-safe |
+| 4 | Rename the second `KisColorSelector` (artistic colour selector), which clashes with the advanced colour selector's class of the same name | `plugins/dockers/artisticcolorselector/` | **Done** (`3b7ec59`) |
+| 5 | Move plugin-scope static initializers that use `i18n()` or registries out of pre-`main()` static initialization. Only MyPaint's sensor factories qualified; the other six register metatypes or QML types, which is safe before `main()`. | `plugins/paintops/mypaint/MyPaintSensorPack.cpp` | **Done** (`7c312d0`) |
 | 6 | Add CMake `KRITA_MOBILE` (`ANDROID OR IOS`), set as a global compile definition so no header can forget it. Add a `MACOS` variable (`APPLE AND NOT IOS`). | top-level `CMakeLists.txt` | Linux-safe, but it only means something once its users exist (step 7) |
 | 7 | Switch the 144 **reuse** guards from `Q_OS_ANDROID` / `if(ANDROID)` to `KRITA_MOBILE`, splitting mixed guards. On Android nothing changes, because `KRITA_MOBILE` is defined exactly when `ANDROID` is today. | section 1 table; mixed guards at `KisMainWindow.cpp:639/:3172`, `krita/data/CMakeLists.txt:24`, `libs/ui/CMakeLists.txt:577/:807` | Linux-safe to write, but only an Android or iOS build compiles the changed branches, so do it together with step 13 |
 | 8 | Replace plain `APPLE` with `MACOS` in the about 25 CMake blocks that are macOS-only: macosutils/AppKit, `osx.mm`, `krita/integration`, bundle/plist/icon, `-mmacosx-version-min`, CLI tools | section 2.2 row 34, section 1 "Darwin hazards" | Mac |
 | 9 | iOS toolchain files (`ios-toolchain.cmake`, `ios-toolchain-krita.cmake`), an `iOS` platform in `latest/krita-deps.yml` and the recipes' `.kde-ci.yml`, and `elseif(IOS)` branches before the `APPLE` ones in the 8 recipes that have them | krita-deps-management | Deps repo, Mac |
 | 10 | `ext_qt` iOS branch: Qt 6 static, arm64 device and simulator, qtbase qtdeclarative qtsvg qtimageformats qttools qtshadertools qt5compat (+ quickcontrols2 if separate), `-qt-host-path` | krita-deps-management `ext_qt/CMakeLists.txt` (`D6:`) | Deps repo, Mac |
-| 11 | `KRITA_STATIC_BUILD` option: `kis_add_library` rewrites `SHARED`/`MODULE` to `STATIC`, records plugin targets, and adds `QT_STATICPLUGIN` + `KRITA_STATIC_PLUGINS` globally. Add an iOS plugin allowlist (minimal 13 in section 4.4 (e)) and convert the 4 plain `add_library(... MODULE)` calls. | top-level `CMakeLists.txt:1076`, `plugins/**/CMakeLists.txt` | Mac (the CMake can be written now, but a full static Linux link would be the only check, and it's a long one) |
-| 12 | Generated `krita_static_plugins.cpp`: `Q_IMPORT_PLUGIN` per allowlisted plugin, Qt's iOS/sqlite/svg/jpeg plugins, `Q_INIT_RESOURCE` per library or plugin `.qrc`, called from `main()` | `krita/CMakeLists.txt`, `krita/main.cc:657` | Mac |
+| 11 | `KRITA_STATIC_BUILD` option (on by default for iOS): `kis_add_library` builds `SHARED`/`MODULE` as `STATIC`, `BUILD_SHARED_LIBS` off, plugins outside `KRITA_STATIC_PLUGINS_ALLOWLIST` left out of the default build | `cmake/modules/KritaStaticBuild.cmake`, top-level `CMakeLists.txt` | **Done** on Linux (`971f21d`, `a2ac82c`, `31d0825`); see "Static Linux build" below |
+| 12 | Plugin registry: a generated `krita_static_plugins.cpp` of `Q_IMPORT_PLUGIN` calls (class names read from `K_PLUGIN_FACTORY_WITH_JSON`), and whole-archive linking of every library and plugin, which keeps Qt resources and static initializers without `Q_INIT_RESOURCE`. Qt's own iOS plugins (platform, sqlite, svg, jpeg) still need importing on iOS. | `krita/CMakeLists.txt` | Krita side **done** on Linux (`971f21d`); Qt plugin imports: Mac |
 | 13 | GLES and input guards extended to iOS: `QT_OPENGL_ES_3`, GLES-only probing, GL fences, context switch lock, Qt 6 backend, shortcut matcher, input manager | `libs/ui/CMakeLists.txt:1`, `libs/ui/opengl/kis_opengl.cpp:920/:961`, `KisOpenGLSync.cpp:55`, `KisOpenGLContextSwitchLock.cpp:18`, `krita/main.cc:447`, `kis_shortcut_matcher.cpp:201`, `kis_input_manager.cpp:568` | Mac |
 | 14 | `totalRAM()` iOS branch (`os_proc_available_memory()` or `sysctl hw.memsize`) and a lower default hard limit (start around 30%) | `libs/image/kis_image_config.cpp:425-491` | Mac |
 | 15 | Paths inside the `.app`: installation prefix `applicationDirPath()+"/"`, plugin lookup, translations, MLT | `libs/resources/KoResourcePaths.cpp:145-151`, `libs/koplugin/KoJsonTrader.cpp` (directory branch), `krita/main.cc:759/:1015` | Mac |
@@ -1347,4 +1347,31 @@ Each step is meant to be one commit. **Done** means committed on this branch and
 | 19 | Native file access: `UIDocumentPickerViewController` behind `KoFileDialog`; security-scoped bookmarks for recent files (template: `libs/macosutils/KisMacosSecurityBookmarkManager.mm`); "outside app container" predicate replacing `startsWith("content://")` | `libs/widgetutils/KoFileDialog.cpp:217/:266/:311`, `KisRecentFilesManager_p.h:42/:108`, `KisDocument.cpp:1910` | Mac (later: Phase 6 only needs the Documents folder, step 16) |
 | 20 | Make the libav in-process encoder build under `KRITA_MOBILE` (or `TARGET LibAV`), keeping `KisAndroidMediaEncoderRunnable` Android-only | `libs/ui/CMakeLists.txt:577` | Mac, deferred (animation export is out of scope until painting works) |
 
-Steps 4 and 5 were left for the next session. They only matter once step 11 links plugins statically. A whole-archive static link turns any clash left by step 4 into a link error. Step 5 shows up at startup as missing translations, or as a `verifyMetatypeRegistration()` abort in builds with safe asserts.
+### Static Linux build
+
+The static build runs on Linux with Qt 5.15 and KF5 from Ubuntu 24.04:
+
+```bash
+cmake -G Ninja <krita-src> -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DKRITA_STATIC_BUILD=ON
+ninja krita
+```
+
+It links 47 libraries and 17 Krita plugins into one 99 MB `krita` executable (Qt and KF5 stay shared on Linux). The default allowlist is the 13-plugin painting set from section 4.4 (e) plus the two vector shape plugins, `krita_shape_image` and `krita_shape_paths`: text rendering looks those shapes up without a null check, and crashes on first start without them.
+
+To run it without installing, put the binary in a `bin/` directory next to a `share/` taken from a normal install (`KoResourcePaths` falls back to `applicationDirPath()/../`). Verified with this binary:
+
+- Command-line export of a `.kra` to PNG is byte-identical to the shared build's output.
+- Under Xvfb, the GUI opens a `.kra` with canvas, toolbox and all four allowlisted dockers, and a mouse stroke paints with the pixel brush.
+- All 17 plugins arrive through `QPluginLoader::staticPlugins()`; the QML module's plugin is registered too and correctly skipped by `KoJsonTrader`.
+
+What the whole-archive link found:
+
+- `KisPaintOpPluginUtils::effectiveSpacing()` and `effectiveTiming()` were non-inline functions defined in a header, one copy per paintop. Fixed in `a2ac82c`.
+- No other duplicate symbols in this plugin set. Linking with `KRITA_STATIC_PLUGINS_ALLOWLIST=ALL` would check the remaining plugins.
+
+Problems that are not specific to the static build (the shared build behaves the same):
+
+- Command-line export crashes about 1 run in 3 on exit: an image update job still runs after `main()` returns and calls the already destroyed `KisUpdateTimeMonitor` singleton.
+- The GUI crashes at start on the `offscreen` Qt platform, because `KisClipboard` calls `hasImage()` on the clipboard's null `mimeData()`. Use Xvfb for headless GUI tests.
+
+Not covered on Linux: Qt 6, static Qt (here Qt itself is shared, so no Qt plugins needed importing), the Qt 6 QML module path in `qmlmodules/components/CMakeLists.txt`, and Apple's linker (`-force_load` is used there instead of `--whole-archive`). ECM 5.x writes a stray `_init.cpp` into `qmlmodules/components/` in static builds (it uses an unset variable for the output path); it is in `.gitignore`.
