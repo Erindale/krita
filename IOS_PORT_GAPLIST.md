@@ -1369,7 +1369,7 @@ To run it without installing, put the binary in a `bin/` directory next to a `sh
 What the whole-archive link found:
 
 - `KisPaintOpPluginUtils::effectiveSpacing()` and `effectiveTiming()` were non-inline functions defined in a header, one copy per paintop. Fixed in `a2ac82c`.
-- No other duplicate symbols in this plugin set. Linking with `KRITA_STATIC_PLUGINS_ALLOWLIST=ALL` would check the remaining plugins.
+- With `KRITA_STATIC_PLUGINS_ALLOWLIST=ALL` (219 libraries, 169 plugins, a 125 MB binary) the link found the other kind of duplicate: sources compiled into two plugins. Eight import/export pairs (ora, exr, jpeg, csv, heightmap, heif, gif, brush) compiled their converter twice, the levels filter compiled two files from the colors filters, and the TIFF logger header defined functions without `inline`. Fixed in `7f47e29` by one `STATIC` helper library per pair. After that the all-plugins binary links, exports PNG (byte-identical), ORA, PSD, JPEG and TIFF, and under Xvfb opens a `.kra` with the full toolbox and paints a stroke; `KoJsonTrader` reports all 168 Krita plugins (the 169th is the QML plugin, correctly skipped). So no duplicate-symbol problem remains in the Linux plugin set; plugins not built on Linux (platform plugins for xcb/wayland are built; G'MIC and Python are not) are unchecked.
 
 Problems that are not specific to the static build (the shared build behaves the same):
 
