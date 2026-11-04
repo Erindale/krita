@@ -23,7 +23,7 @@ class QPainter;
 class KisDisplayColorConverter;
 class QTransform;
 
-class KisColorSelector: public QWidget
+class KisArtisticColorSelector: public QWidget
 {
     Q_OBJECT
 
@@ -44,7 +44,7 @@ class KisColorSelector: public QWidget
     };
 
 public:
-    KisColorSelector(QWidget* parent, KisColor::Type type=KisColor::HSL);
+    KisArtisticColorSelector(QWidget* parent, KisColor::Type type=KisColor::HSL);
 
     void setColorSpace(KisColor::Type type);
     void setColorConverter(KisDisplayColorConverter* colorConverter);
