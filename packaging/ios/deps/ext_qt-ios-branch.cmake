@@ -1,6 +1,6 @@
 # iOS branch of ext_qt/CMakeLists.txt in krita-deps-management, as committed
 # on the `ios` branch of https://github.com/Erindale/krita-deps-management
-# (92fcb8a, from transition.now/qt6). It sits after `elseif (NOT APPLE)` and
+# (from transition.now/qt6). It sits after `elseif (NOT APPLE)` and
 # before the final `else( APPLE )` macOS branch, since CMake sets APPLE for
 # iOS too. Kept here for sessions without that repository.
 #
@@ -19,9 +19,10 @@ elseif (IOS)
     # from KDECI_IOS_SDK), the minimum iOS version from the environment's
     # IPHONEOS_DEPLOYMENT_TARGET; Qt 6.11 needs 17.0 or later.
     #
-    # Qt's bundled zlib, libpng, libjpeg, freetype, harfbuzz and pcre2 are
-    # used for now. Once the rest of the dependencies are built for iOS,
-    # switch to -system-* so the final static link has one copy of each.
+    # Everything is linked statically into one app, so Qt uses the
+    # prefix's libpng, libjpeg, freetype, harfbuzz, libtiff and libwebp
+    # (and the SDK's zlib) instead of its bundled copies. Only pcre2 stays
+    # bundled; Krita does not use it.
     include(${CMAKE_SOURCE_DIR}/FilterEnvironmentPathList.cmake)
 
     filter_environment_path_list(PATH "${EXTPREFIX}" HOST_ONLY_PATH)
@@ -35,8 +36,9 @@ elseif (IOS)
         set(IOS_QT_SDK iphoneos)
     endif()
 
-    if (DEFINED ENV{IPHONEOS_DEPLOYMENT_TARGET})
-        set(IOS_QT_DEPLOYMENT_TARGET $ENV{IPHONEOS_DEPLOYMENT_TARGET})
+    # from tools/ios-toolchain.cmake (IPHONEOS_DEPLOYMENT_TARGET), 17.0 by default
+    if (CMAKE_OSX_DEPLOYMENT_TARGET)
+        set(IOS_QT_DEPLOYMENT_TARGET ${CMAKE_OSX_DEPLOYMENT_TARGET})
     else()
         set(IOS_QT_DEPLOYMENT_TARGET 17.0)
     endif()
@@ -54,7 +56,11 @@ elseif (IOS)
         -submodules ${IOS_QT_SUBMODULES_COMMA}
         -nomake examples -nomake tests
         -no-dbus -no-qml-debug -no-libproxy -no-system-proxies
-        -qt-zlib -qt-libpng -qt-libjpeg -qt-freetype -qt-harfbuzz -qt-pcre -qt-sqlite
+        -system-zlib -system-libpng -system-libjpeg -system-freetype -system-harfbuzz
+        -qt-pcre -qt-sqlite
+        -system-tiff -system-webp
+        -I ${EXTPREFIX}/include
+        -L ${EXTPREFIX}/lib
         # SecureTransport/Network.framework is used on Apple platforms
         -no-openssl
         -no-feature-assistant -no-feature-designer -feature-linguist
@@ -62,6 +68,9 @@ elseif (IOS)
         -Wno-dev
         -DCMAKE_OSX_ARCHITECTURES=arm64
         -DCMAKE_OSX_DEPLOYMENT_TARGET=${IOS_QT_DEPLOYMENT_TARGET}
+        # find the dependencies in the prefix (the SDK is searched anyway)
+        -DCMAKE_PREFIX_PATH=${EXTPREFIX}
+        -DCMAKE_FIND_ROOT_PATH=${EXTPREFIX}
         # we ship our own version of freedesktop.org.xml database
         # which has Krita-specific formats and translations, so we
         # can disable the internal database shipped with Qt

@@ -1,6 +1,6 @@
 # iPadOS packaging (personal, sideloaded build)
 
-Drafts for the parts of the iPadOS port that can only be verified with Xcode. The Qt recipe and the dependency toolchain file have been built on the Mac (Phase 2, see `IOS_QT_BUILD.md`); everything else here is still unbuilt. The audit behind it is `IOS_PORT_GAPLIST.md` at the repository root; its section 8 lists the remaining steps.
+Drafts for the parts of the iPadOS port that can only be verified with Xcode. The Qt recipe, the dependency toolchains and the dependency set have been built on the Mac (Phases 2 and 3, see `IOS_QT_BUILD.md` and `IOS_DEPS_BUILD.md`); `Info.plist.in` and the Krita-side code are still unbuilt. The audit behind it is `IOS_PORT_GAPLIST.md` at the repository root; its section 8 lists the remaining steps.
 
 ## What is here
 
@@ -8,15 +8,15 @@ Drafts for the parts of the iPadOS port that can only be verified with Xcode. Th
 |---|---|---|
 | `Info.plist.in` | used in place by `krita/CMakeLists.txt` when `IOS` is set | Bundle metadata: iPad only, Files app sharing on, `.kra`/`.krz`/`.bundle` document types |
 | `deps/ios-toolchain.cmake` | `krita-deps-management/tools/` (committed on the fork's `ios` branch) | Cross-compile toolchain for the dependency recipes (device or simulator SDK, arm64, static, iOS 17.0 minimum) |
-| `deps/ios-toolchain-krita.cmake` | `krita-deps-management/tools/` | The same for Krita itself: pre-seeded `try_run` results, `KRITA_STATIC_BUILD`, no updaters/Python/MLT |
-| `deps/ext_qt-ios-branch.cmake` | `krita-deps-management/ext_qt/CMakeLists.txt` before its `else( APPLE )` branch; committed on the fork's `ios` branch (`92fcb8a`) | Static Qt 6 for iOS with macOS host tools, following the Android branch. Verified (`IOS_QT_BUILD.md`) |
-| `deps/deps-ios.yml` | appended to `krita-deps-management/latest/krita-deps.yml` | The iOS platform block |
+| `deps/ios-toolchain-krita.cmake` | `krita-deps-management/tools/` (committed on the fork's `ios` branch) | The same for Krita itself: pre-seeded `try_run` results, `KRITA_STATIC_BUILD`, no updaters/Python/MLT |
+| `deps/ext_qt-ios-branch.cmake` | `krita-deps-management/ext_qt/CMakeLists.txt` before its `else( APPLE )` branch; committed on the fork's `ios` branch | Static Qt 6 for iOS with macOS host tools, against the dependency prefix's libraries. Verified (`IOS_QT_BUILD.md`, `IOS_DEPS_BUILD.md`) |
+| `deps/deps-ios.yml` | summary of the iOS entries in `krita-deps-management/latest/krita-deps.yml` | The iOS platform block, as committed |
 | `screenshots/` | referenced by `IOS_QT_BUILD.md` | Qt examples on the simulator (Phase 2) |
 | `../../IOS_PORT_PLAN.md` | read first on the Mac | The whole plan, with the Phase 2 brief to paste into Claude Code |
 
 ## Build outline (Mac)
 
-1. Build the dependencies into one prefix with `-DCMAKE_TOOLCHAIN_FILE=tools/ios-toolchain.cmake`, Qt first (see the Phase 2 brief), then the required recipes from the gap list's section 3.
+1. Build the dependencies, Qt included, into one prefix per SDK with `tools/ios-build-deps.sh <iphoneos|iphonesimulator>` in krita-deps-management (see `IOS_DEPS_BUILD.md` for the host tools it needs).
 2. Configure Krita:
 
    ```bash

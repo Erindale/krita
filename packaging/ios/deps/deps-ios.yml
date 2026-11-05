@@ -1,18 +1,25 @@
-# iOS entry for latest/krita-deps.yml in krita-deps-management.
+# iOS entries of latest/krita-deps.yml, as committed on the `ios` branch of
+# https://github.com/Erindale/krita-deps-management (see IOS_DEPS_BUILD.md).
 #
 # Platform strings are matched by prefix, so 'iOS' covers iOS/arm64 and
-# iOS/simulator. Everything in the '@all' block applies to iOS as well; this
-# block only adds what the other platforms get from their own blocks. Recipes
-# excluded from Android for the same reasons (iconv, lzma, ocio, vpl,
-# libraw, kdcraw, python, sip, pyqt*, poppler, pkgconfig, meson,
-# python-modules, kcrash, fcitx-qt, appimagetool, linuxdeployqt) need an
-# 'iOS' entry in their exclusion lists too, or a `'on': [...]` that leaves
-# iOS out.
+# iOS/simulator. iOS gets the '@all' block, which on that branch holds only
+# what iOS builds; what iOS defers moved to a block for the four other
+# platforms, so their sets are unchanged:
 #
-# Unverified: no dependency has been built for iOS yet.
+# - 'on': ['Windows', 'MacOS', 'Linux', 'Android']
+#   'require':
+#     heif/libaom, base/openjpeg, base/highway, base/jpegxl, base/karchive,
+#     base/kitemmodels, base/kimageformats, base/kwindowsystem, base/seexpr,
+#     base/icu, ffmpeg/{flac,libogg,opus,sdl2,vpx,libvorbis,libtheora,
+#     openh264,lame}, base/mlt
+#
+# The block that adds iOS's own entries:
 
 - 'on': ['iOS']
   'require':
-    "base/zlib": "master"
-    "base/gettext": "master"
-    "base/libintl-lite": "master"
+    "base/zlib": "master"         # installs zlib.pc for the SDK's libz
+    "base/libintl-lite": "master" # libintl for ki18n, as on Android
+
+# krita-ci-utilities has no iOS flavour, so nothing reads this yet; the
+# build is driven by tools/ios-build-deps.sh in that repository, which has
+# the same set in dependency order.

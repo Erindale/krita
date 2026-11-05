@@ -102,9 +102,9 @@ Six phases. The first is Linux-only and costs nothing but agent time; nothing af
 
 **Phase 3: dependencies**
 
-- [ ] iOS toolchain file committed
-- [ ] Required dependencies cross-compiled and installed to one prefix
-- [ ] Optional importers deferred and listed
+- [x] iOS toolchain file committed
+- [x] Required dependencies cross-compiled and installed to one prefix
+- [x] Optional importers deferred and listed
 
 **Phase 4: Krita**
 
