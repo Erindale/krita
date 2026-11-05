@@ -5,12 +5,26 @@
  */
 #include "KisIosApplicationState.h"
 
+#include <QCoreApplication>
+#include <QMetaObject>
+
 #import <UIKit/UIKit.h>
+
+namespace {
+// Run the callback from Qt's event loop, not from inside the UIKit callout:
+// start-up may open modal dialogs (autosave recovery), and UIKit cannot
+// finish activating the scene, or draw anything, until the notification
+// handler returns.
+void runQueued(std::function<void()> callback)
+{
+    QMetaObject::invokeMethod(QCoreApplication::instance(), [callback]() { callback(); }, Qt::QueuedConnection);
+}
+}
 
 void kisIosRunWhenApplicationActive(std::function<void()> callback)
 {
     if (UIApplication.sharedApplication.applicationState == UIApplicationStateActive) {
-        callback();
+        runQueued(callback);
         return;
     }
 
@@ -22,6 +36,6 @@ void kisIosRunWhenApplicationActive(std::function<void()> callback)
                 usingBlock:^(NSNotification *) {
                     [NSNotificationCenter.defaultCenter removeObserver:observer];
                     observer = nil;
-                    callback();
+                    runQueued(callback);
                 }];
 }

@@ -10,6 +10,9 @@
 #include <QPointer>
 #include <QApplication>
 #include <QFrame>
+#ifdef Q_OS_IOS
+#include <QScrollArea>
+#endif
 #include <QHBoxLayout>
 #include <QKeyEvent>
 #include <QScreen>
@@ -147,7 +150,23 @@ void KisPopupButton::setPopupWidget(QWidget* widget)
 
         m_d->popupWidget = widget;
 
+#ifdef Q_OS_IOS
+        if (!menu) {
+            // iOS has no window manager to keep a popup on screen, and on a
+            // small iPad some popups (the brush editor) are wider than the
+            // screen. Put the content in a scroll area so the popup can be
+            // capped at the screen size (see adjustPosition()) and scrolled.
+            QScrollArea *scrollArea = new QScrollArea(m_d->frame);
+            scrollArea->setFrameShape(QFrame::NoFrame);
+            scrollArea->setWidgetResizable(true);
+            scrollArea->setWidget(m_d->popupWidget);
+            m_d->frame->layout()->addWidget(scrollArea);
+        } else {
+            m_d->frame->layout()->addWidget(m_d->popupWidget);
+        }
+#else
         m_d->frame->layout()->addWidget(m_d->popupWidget);
+#endif
 
         if (menu) {
             // The menu may decide to hide itself in response to user input.
@@ -266,6 +285,14 @@ void KisPopupButton::adjustPosition()
         return getCurrentScreen();
     }();
     QRect screenRect = screen->availableGeometry();
+#ifdef Q_OS_IOS
+    // the content scrolls (see setPopupWidget()), so the popup never needs
+    // to be larger than the screen
+    if (!qobject_cast<QMenu *>(m_d->popupWidget)) {
+        popSize = m_d->popupWidget->sizeHint().expandedTo(popSize).boundedTo(screenRect.size());
+        popupRect.setSize(popSize);
+    }
+#endif
     if (m_d->isPopupDetached) {
         if (m_d->isDetachedGeometrySet) {
             popupRect.moveTo(m_d->frame->geometry().topLeft());

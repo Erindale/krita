@@ -9,8 +9,9 @@
 #include <functional>
 
 /**
- * Runs @p callback once UIKit reports the application active: immediately
- * if it already is, otherwise on UIApplicationDidBecomeActiveNotification.
+ * Runs @p callback from Qt's event loop once UIKit reports the application
+ * active: right away if it already is, otherwise after
+ * UIApplicationDidBecomeActiveNotification.
  *
  * Qt reports Qt::ApplicationActive when the window scene activates, which
  * on iPadOS can be over a second before UIApplication itself is active;
