@@ -1,16 +1,17 @@
 # iPadOS packaging (personal, sideloaded build)
 
-Drafts for the parts of the iPadOS port that can only be verified with Xcode. Nothing in this directory has been built or signed yet. The audit behind it is `IOS_PORT_GAPLIST.md` at the repository root; its section 8 lists the remaining steps.
+Drafts for the parts of the iPadOS port that can only be verified with Xcode. The Qt recipe and the dependency toolchain file have been built on the Mac (Phase 2, see `IOS_QT_BUILD.md`); everything else here is still unbuilt. The audit behind it is `IOS_PORT_GAPLIST.md` at the repository root; its section 8 lists the remaining steps.
 
 ## What is here
 
 | File | Goes where | Purpose |
 |---|---|---|
 | `Info.plist.in` | used in place by `krita/CMakeLists.txt` when `IOS` is set | Bundle metadata: iPad only, Files app sharing on, `.kra`/`.krz`/`.bundle` document types |
-| `deps/ios-toolchain.cmake` | `krita-deps-management/tools/` | Cross-compile toolchain for the dependency recipes (device or simulator SDK, arm64, static) |
+| `deps/ios-toolchain.cmake` | `krita-deps-management/tools/` (committed on the fork's `ios` branch) | Cross-compile toolchain for the dependency recipes (device or simulator SDK, arm64, static, iOS 17.0 minimum) |
 | `deps/ios-toolchain-krita.cmake` | `krita-deps-management/tools/` | The same for Krita itself: pre-seeded `try_run` results, `KRITA_STATIC_BUILD`, no updaters/Python/MLT |
-| `deps/ext_qt-ios-branch.cmake` | spliced into `krita-deps-management/ext_qt/CMakeLists.txt` (branch `transition.now/qt6`) before its `else( APPLE )` branch | Static Qt 6 for iOS with macOS host tools, following the Android branch |
+| `deps/ext_qt-ios-branch.cmake` | `krita-deps-management/ext_qt/CMakeLists.txt` before its `else( APPLE )` branch; committed on the fork's `ios` branch (`92fcb8a`) | Static Qt 6 for iOS with macOS host tools, following the Android branch. Verified (`IOS_QT_BUILD.md`) |
 | `deps/deps-ios.yml` | appended to `krita-deps-management/latest/krita-deps.yml` | The iOS platform block |
+| `screenshots/` | referenced by `IOS_QT_BUILD.md` | Qt examples on the simulator (Phase 2) |
 | `../../IOS_PORT_PLAN.md` | read first on the Mac | The whole plan, with the Phase 2 brief to paste into Claude Code |
 
 ## Build outline (Mac)

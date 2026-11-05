@@ -5,7 +5,7 @@
 #
 # Environment:
 #   KDECI_IOS_SDK                 iphoneos (default) or iphonesimulator
-#   IPHONEOS_DEPLOYMENT_TARGET    minimum iPadOS version, default 16.0
+#   IPHONEOS_DEPLOYMENT_TARGET    minimum iPadOS version, default 17.0 (the minimum Qt 6.11 supports)
 #   CMAKE_PREFIX_PATH             the dependency install prefix
 #
 # Unverified: nothing has been configured with this file yet.
@@ -22,7 +22,7 @@ endif()
 if (DEFINED ENV{IPHONEOS_DEPLOYMENT_TARGET})
     set(KRITA_IOS_DEPLOYMENT_TARGET "$ENV{IPHONEOS_DEPLOYMENT_TARGET}")
 else()
-    set(KRITA_IOS_DEPLOYMENT_TARGET "16.0")
+    set(KRITA_IOS_DEPLOYMENT_TARGET "17.0")
 endif()
 
 set(CMAKE_SYSTEM_NAME iOS)

@@ -81,7 +81,7 @@ Six phases. The first is Linux-only and costs nothing but agent time; nothing af
 
 **Before starting**
 
-- [ ] Apple ID signed in to Xcode (free is enough to start; paid program for year-long installs)
+- [x] Apple ID signed in to Xcode (free is enough to start; paid program for year-long installs)
 - [ ] iPad UDID noted and registered to the Apple ID
 - [ ] External SSD (APFS, 250 GB or more) attached and excluded from Spotlight and Time Machine; current Xcode with the iOS SDK and a simulator runtime installed on the laptop
 - [x] Claude Code cloud session opened on a fork or clone of Krita
@@ -96,9 +96,9 @@ Six phases. The first is Linux-only and costs nothing but agent time; nothing af
 
 **Phase 2: Qt**
 
-- [ ] Static Qt for iOS device built
-- [ ] Static Qt for iOS simulator built
-- [ ] Qt tablet example runs on the simulator
+- [x] Static Qt for iOS device built
+- [x] Static Qt for iOS simulator built
+- [x] Qt tablet example runs on the simulator
 
 **Phase 3: dependencies**
 
