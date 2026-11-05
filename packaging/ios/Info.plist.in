@@ -18,6 +18,33 @@
     <string>6.0</string>
     <key>CFBundleName</key>
     <string>${MACOSX_BUNDLE_BUNDLE_NAME}</string>
+    <!-- App icon: compiled from pics/branding/<branding>/krita.icon by actool
+         (krita/CMakeLists.txt) into Assets.car and fallback PNGs -->
+    <key>CFBundleIcons</key>
+    <dict>
+      <key>CFBundlePrimaryIcon</key>
+      <dict>
+        <key>CFBundleIconFiles</key>
+        <array>
+          <string>krita60x60</string>
+        </array>
+        <key>CFBundleIconName</key>
+        <string>krita</string>
+      </dict>
+    </dict>
+    <key>CFBundleIcons~ipad</key>
+    <dict>
+      <key>CFBundlePrimaryIcon</key>
+      <dict>
+        <key>CFBundleIconFiles</key>
+        <array>
+          <string>krita60x60</string>
+          <string>krita76x76</string>
+        </array>
+        <key>CFBundleIconName</key>
+        <string>krita</string>
+      </dict>
+    </dict>
     <key>CFBundleDisplayName</key>
     <string>${MACOSX_BUNDLE_BUNDLE_NAME}</string>
     <key>CFBundlePackageType</key>

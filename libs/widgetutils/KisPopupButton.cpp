@@ -122,6 +122,12 @@ KisPopupButton::~KisPopupButton()
 
 void KisPopupButton::setPopupWidgetDetached(bool detach)
 {
+#ifdef Q_OS_IOS
+    // A detached popup is a window of its own, and iOS has no window
+    // manager: no title bar to move or close it. Always keep it attached,
+    // so that a tap outside closes it.
+    detach = false;
+#endif
     m_d->isPopupDetached = detach;
     if (m_d->frame) {
         bool wasVisible = isPopupWidgetVisible();
@@ -289,8 +295,15 @@ void KisPopupButton::adjustPosition()
     // the content scrolls (see setPopupWidget()), so the popup never needs
     // to be larger than the screen
     if (!qobject_cast<QMenu *>(m_d->popupWidget)) {
-        popSize = m_d->popupWidget->sizeHint().expandedTo(popSize).boundedTo(screenRect.size());
+        // keep the button (and the toolbar around it) visible, so that a tap
+        // there closes the popup again
+        QRect fitRect = screenRect;
+        if (this->isVisible() && !m_d->isPopupDetached) {
+            fitRect.setTop(qMax(screenRect.top(), pos.y()));
+        }
+        popSize = m_d->popupWidget->sizeHint().expandedTo(popSize).boundedTo(fitRect.size());
         popupRect.setSize(popSize);
+        screenRect = fitRect;
     }
 #endif
     if (m_d->isPopupDetached) {

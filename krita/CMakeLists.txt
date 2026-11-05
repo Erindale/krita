@@ -53,6 +53,38 @@ elseif (MACOS)
              "${CMAKE_CURRENT_SOURCE_DIR}/pics/branding/${BRANDING}/1024-apps-krita.png"
         )
     endif() # XCode version
+elseif (IOS)
+    # The same Icon Composer icon as macOS, compiled for the iOS SDK in use
+    # into Assets.car plus the fallback PNGs that Info.plist.in names; they
+    # are copied into the bundle after the link (see below)
+    find_program(XCRUN_EXECUTABLE NAMES xcrun)
+    set(KRITA_ASSETS_ICON "${CMAKE_CURRENT_SOURCE_DIR}/pics/branding/${BRANDING}/krita.icon")
+    cmake_path(SET KRITA_IOS_ASSETS_PATH "${CMAKE_CURRENT_BINARY_DIR}/ios-assets")
+    if (CMAKE_OSX_SYSROOT MATCHES "[Ss]imulator")
+        set(KRITA_IOS_ACTOOL_PLATFORM iphonesimulator)
+    else()
+        set(KRITA_IOS_ACTOOL_PLATFORM iphoneos)
+    endif()
+    set(KRITA_IOS_ICON_FILES
+        "${KRITA_IOS_ASSETS_PATH}/Assets.car"
+        "${KRITA_IOS_ASSETS_PATH}/krita60x60@2x.png"
+        "${KRITA_IOS_ASSETS_PATH}/krita76x76@2x~ipad.png")
+    add_custom_command(
+        OUTPUT ${KRITA_IOS_ICON_FILES}
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${KRITA_IOS_ASSETS_PATH}"
+        COMMAND ${XCRUN_EXECUTABLE} actool "${KRITA_ASSETS_ICON}"
+            --compile "${KRITA_IOS_ASSETS_PATH}"
+            --platform ${KRITA_IOS_ACTOOL_PLATFORM}
+            --minimum-deployment-target ${CMAKE_OSX_DEPLOYMENT_TARGET}
+            --target-device ipad
+            --app-icon krita
+            --output-partial-info-plist "${CMAKE_CURRENT_BINARY_DIR}/krita_ios_icon.plist"
+            --output-format human-readable-text
+        DEPENDS "${KRITA_ASSETS_ICON}"
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling the iOS app icon"
+    )
+    add_custom_target(krita_ios_icon DEPENDS ${KRITA_IOS_ICON_FILES})
 endif()
 
 if (WIN32)
@@ -222,6 +254,13 @@ target_link_libraries(krita
                       Qt${QT_MAJOR_VERSION}::Svg)
 if(HAVE_KCRASH)
     target_link_libraries(krita PRIVATE KF${KF_MAJOR}::Crash)
+endif()
+
+if (IOS)
+    add_dependencies(krita krita_ios_icon)
+    add_custom_command(TARGET krita POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy ${KRITA_IOS_ICON_FILES} "$<TARGET_BUNDLE_DIR:krita>"
+        COMMENT "Copying the app icon into the bundle")
 endif()
 
 if (KRITA_STATIC_BUILD)
