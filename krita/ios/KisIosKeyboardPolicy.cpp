@@ -7,6 +7,8 @@
 
 #include <QAbstractSpinBox>
 #include <QApplication>
+#include <QComboBox>
+#include <QMouseEvent>
 #include <QInputMethod>
 #include <QInputMethodQueryEvent>
 #include <QLineEdit>
@@ -42,6 +44,29 @@ bool KisIosKeyboardPolicy::isUnlocked(const QWidget *widget) const
         && (widget == m_unlocked || widget->isAncestorOf(m_unlocked) || m_unlocked->isAncestorOf(widget));
 }
 
+QAbstractSpinBox *KisIosKeyboardPolicy::editableSpinBoxAt(QWidget *widget)
+{
+    for (QWidget *w = widget; w; w = w->parentWidget()) {
+        if (QAbstractSpinBox *spinBox = qobject_cast<QAbstractSpinBox *>(w)) {
+            return spinBox->isReadOnly() ? nullptr : spinBox;
+        }
+        if (w->isWindow()) {
+            break;
+        }
+    }
+    return nullptr;
+}
+
+void KisIosKeyboardPolicy::unlockAndShow(QWidget *widget)
+{
+    m_unlocked = widget;
+    if (widget->hasFocus()) {
+        // already focused but held back: bring the keyboard up now
+        QGuiApplication::inputMethod()->update(Qt::ImEnabled);
+        QGuiApplication::inputMethod()->show();
+    }
+}
+
 bool KisIosKeyboardPolicy::eventFilter(QObject *watched, QEvent *event)
 {
     if (!watched->isWidgetType()) {
@@ -54,11 +79,22 @@ bool KisIosKeyboardPolicy::eventFilter(QObject *watched, QEvent *event)
         // touches arrive as mouse events; a press on a text field unlocks it
         // before it gets focus, so the keyboard comes up for that tap
         if (isTextEntry(widget)) {
-            m_unlocked = widget;
-            if (widget->hasFocus()) {
-                // already focused but held back: bring the keyboard up now
-                QGuiApplication::inputMethod()->update(Qt::ImEnabled);
-                QGuiApplication::inputMethod()->show();
+            unlockAndShow(widget);
+        }
+        // a number field only unlocks on release, and only for a tap: a
+        // drag on a slider spin box changes the value instead
+        if (!m_pressedSpinBox) {
+            m_pressedSpinBox = editableSpinBoxAt(widget);
+            m_pressPosition = static_cast<QMouseEvent *>(event)->globalPosition();
+        }
+        break;
+    case QEvent::MouseButtonRelease:
+        if (m_pressedSpinBox) {
+            QAbstractSpinBox *spinBox = m_pressedSpinBox;
+            m_pressedSpinBox = nullptr;
+            const QPointF moved = static_cast<QMouseEvent *>(event)->globalPosition() - m_pressPosition;
+            if (moved.manhattanLength() < 12 && spinBox->isEnabled()) {
+                unlockAndShow(spinBox);
             }
         }
         break;
@@ -70,6 +106,12 @@ bool KisIosKeyboardPolicy::eventFilter(QObject *watched, QEvent *event)
     case QEvent::InputMethodQuery: {
         QInputMethodQueryEvent *query = static_cast<QInputMethodQueryEvent *>(event);
         if (!(query->queries() & Qt::ImEnabled) || isUnlocked(widget)) {
+            break;
+        }
+        // Qt shows a dropdown's list as a native picker in the keyboard's
+        // place (QIOSMenu answers this query through its own event filter);
+        // a non-editable combo box never asks for a keyboard otherwise
+        if (QComboBox *comboBox = qobject_cast<QComboBox *>(widget); comboBox && !comboBox->isEditable()) {
             break;
         }
         // let the widget answer, then hold the keyboard back

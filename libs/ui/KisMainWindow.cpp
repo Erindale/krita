@@ -644,6 +644,16 @@ KisMainWindow::KisMainWindow(QUuid uuid)
     setFixedSize(KisApplication::primaryScreen()->availableGeometry().size());
 
     QScreen *s = QGuiApplication::primaryScreen();
+#ifdef Q_OS_IOS
+    // iOS has no window manager to resize the window: follow the screen.
+    // At launch the screen can still report the other orientation, and
+    // rotation changes the size; a window that does not match the screen
+    // is not drawn at all.
+    connect(s, &QScreen::availableGeometryChanged, this, [this](const QRect &available) {
+        setFixedSize(available.size());
+        move(available.topLeft());
+    });
+#endif
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     // Qt 6 always reports orientation changes
     s->setOrientationUpdateMask(Qt::LandscapeOrientation|Qt::InvertedLandscapeOrientation|Qt::PortraitOrientation|Qt::InvertedPortraitOrientation);

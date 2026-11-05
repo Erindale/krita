@@ -7,8 +7,10 @@
 #define KIS_IOS_KEYBOARD_POLICY_H
 
 #include <QObject>
+#include <QPointF>
 #include <QPointer>
 
+class QAbstractSpinBox;
 class QWidget;
 
 /**
@@ -25,7 +27,9 @@ class QWidget;
  * except a text field the user tapped. A tap on a text field unlocks it
  * before focus moves there, so the keyboard comes up as usual; focus that
  * arrives any other way (a popup or dialog opening, a spin box or slider
- * being dragged) leaves the keyboard down.
+ * being dragged) leaves the keyboard down. A tap (not a drag) on a number
+ * field unlocks it too. Non-editable dropdowns are left alone, since Qt
+ * shows their list as a native picker in the keyboard's place.
  */
 class KisIosKeyboardPolicy : public QObject
 {
@@ -37,9 +41,13 @@ public:
 
 private:
     static bool isTextEntry(const QWidget *widget);
+    static QAbstractSpinBox *editableSpinBoxAt(QWidget *widget);
     bool isUnlocked(const QWidget *widget) const;
+    void unlockAndShow(QWidget *widget);
 
     QPointer<QWidget> m_unlocked;
+    QPointer<QAbstractSpinBox> m_pressedSpinBox;
+    QPointF m_pressPosition;
 };
 
 #endif
