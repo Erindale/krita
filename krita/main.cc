@@ -48,6 +48,7 @@
 #ifdef Q_OS_IOS
 #include "ios/KisIosApplicationState.h"
 #include "ios/KisIosDialogFitter.h"
+#include "ios/KisIosKeyboardPolicy.h"
 #endif
 #include "KritaVersionWrapper.h"
 
@@ -840,6 +841,8 @@ if (!qEnvironmentVariableIsEmpty("KRITA_OPENGL_DEBUG")) {
 #ifdef Q_OS_IOS
     // no window manager on iOS: keep oversized dialogs on the screen
     app.installEventFilter(new KisIosDialogFitter(&app));
+    // the keyboard only comes up when the user taps into a text field
+    app.installEventFilter(new KisIosKeyboardPolicy(&app));
 #endif
     app.setDesktopFileName(QStringLiteral("org.kde.krita"));
 

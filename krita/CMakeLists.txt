@@ -15,6 +15,7 @@ set(krita_SRCS main.cc)
 if (IOS)
     list(APPEND krita_SRCS ios/KisIosApplicationState.mm)
     list(APPEND krita_SRCS ios/KisIosDialogFitter.cpp)
+    list(APPEND krita_SRCS ios/KisIosKeyboardPolicy.cpp)
 endif()
 
 # Set the application icon on the application
