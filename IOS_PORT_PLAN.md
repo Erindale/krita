@@ -110,12 +110,12 @@ Six phases. The first is Linux-only and costs nothing but agent time; nothing af
 
 - [x] iOS CMake configuration builds all plugins static
 - [x] Static plugin registry replaces the disk scan
-- [ ] `Info.plist` with file sharing and document types
-- [ ] Resource folder lives in Documents
-- [ ] Links without unresolved symbols
-- [ ] Launches on the simulator
-- [ ] Canvas draws and a stroke paints
-- [ ] Opens and saves a `.kra`
+- [x] `Info.plist` with file sharing and document types
+- [x] Resource folder lives in Documents
+- [x] Links without unresolved symbols
+- [x] Launches on the simulator
+- [x] Canvas draws and a stroke paints
+- [x] Opens and saves a `.kra`
 
 **Phase 5: device**
 

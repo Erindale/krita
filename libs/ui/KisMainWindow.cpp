@@ -644,7 +644,10 @@ KisMainWindow::KisMainWindow(QUuid uuid)
     setFixedSize(KisApplication::primaryScreen()->availableGeometry().size());
 
     QScreen *s = QGuiApplication::primaryScreen();
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    // Qt 6 always reports orientation changes
     s->setOrientationUpdateMask(Qt::LandscapeOrientation|Qt::InvertedLandscapeOrientation|Qt::PortraitOrientation|Qt::InvertedPortraitOrientation);
+#endif
     connect(s, SIGNAL(orientationChanged(Qt::ScreenOrientation)), this, SLOT(orientationChanged()));
 
 #ifdef Q_OS_ANDROID

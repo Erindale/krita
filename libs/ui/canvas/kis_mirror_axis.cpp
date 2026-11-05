@@ -14,6 +14,11 @@
 #include <QPaintEngine>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
+
+#ifndef GL_MULTISAMPLE_EXT
+// EXT_multisample_compatibility; missing from the iOS GLES headers
+#define GL_MULTISAMPLE_EXT 0x809D
+#endif
 #include <QAction>
 
 #include <kis_icon.h>

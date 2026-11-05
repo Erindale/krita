@@ -45,6 +45,9 @@
 #include <kis_debug.h>
 #include <kis_image_config.h>
 #include <opengl/kis_opengl.h>
+#ifdef Q_OS_IOS
+#include "ios/KisIosApplicationState.h"
+#endif
 #include "KritaVersionWrapper.h"
 
 #include "KisApplicationArguments.h"
@@ -835,10 +838,14 @@ if (!qEnvironmentVariableIsEmpty("KRITA_OPENGL_DEBUG")) {
     app.installEventFilter(KisQtWidgetsTweaker::instance());
     app.setDesktopFileName(QStringLiteral("org.kde.krita"));
 
+#ifndef Q_OS_IOS
+    // No splash on iPadOS: the app starts behind the system launch screen,
+    // and a window shown this early is drawn before the app is active.
     if (!args.noSplash()) {
         QWidget *splash = new KisSplashScreen(480);
         app.setSplashScreen(splash);
     }
+#endif
 
 #if defined Q_OS_WIN
     KisConfig cfg(false);
@@ -897,10 +904,24 @@ if (!qEnvironmentVariableIsEmpty("KRITA_OPENGL_DEBUG")) {
 
     KisApplication::setFont(KisUiFont::normalFont());
 
+#ifdef Q_OS_IOS
+    // main() runs inside UIKit's launch callback, before the app is active.
+    // Windows shown then cannot create their GL surfaces (iOS refuses GL
+    // calls) and nothing repaints them later, so the screen stays black.
+    // Start Krita from the event loop once UIKit reports the app active;
+    // exec() is what hands control back to UIKit.
+    kisIosRunWhenApplicationActive([&app, &args]() {
+        if (!app.start(args)) {
+            KisUsageLogger::log("Could not start Krita Application");
+            KisApplication::exit(1);
+        }
+    });
+#else
     if (!app.start(args)) {
         KisUsageLogger::log("Could not start Krita Application");
         return 1;
     }
+#endif
 
     int state = KisApplication::exec();
 

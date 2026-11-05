@@ -7,6 +7,13 @@ if (ANDROID OR CMAKE_SYSTEM_NAME STREQUAL "iOS")
     # not tied to KRITA_MOBILE: a KRITA_SIMULATE_MOBILE desktop build has a
     # desktop GL Qt.
     add_definitions(-DQT_OPENGL_ES_3)
+    if (QT_MAJOR_VERSION STREQUAL "6")
+        # Qt 5 defined QT_OPENGL_ES_2 itself for a GLES-only build; Qt 6
+        # only has QT_CONFIG(opengles2). Krita's GL code still checks the
+        # macro, and without it takes the desktop GL paths, which use
+        # constants the GLES headers do not have.
+        add_definitions(-DQT_OPENGL_ES_2)
+    endif()
 endif()
 if (ANDROID AND QT_MAJOR_VERSION STREQUAL "5")
     include_directories (${Qt5AndroidExtras_INCLUDE_DIRS})

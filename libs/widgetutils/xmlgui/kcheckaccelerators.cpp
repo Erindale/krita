@@ -22,7 +22,9 @@
 #include <QComboBox>
 #include <QGroupBox>
 #include <QClipboard>
+#if QT_CONFIG(process)
 #include <QProcess>
+#endif
 #include <QDialogButtonBox>
 #include <QFile>
 
@@ -167,14 +169,22 @@ bool KisKCheckAccelerators::eventFilter(QObject *obj, QEvent *e)
             }
 
             //kWarning()<<KGlobal::activeComponent().catalogName()<<text;
+#if QT_CONFIG(process)
             if (copyWidgetTextCommand.isEmpty()) {
+#else
+            // no QProcess on iOS: always copy to the clipboard
+            {
+#endif
                 QClipboard *clipboard = QApplication::clipboard();
                 clipboard->setText(text);
-            } else {
+            }
+#if QT_CONFIG(process)
+            else {
                 QProcess *script = new QProcess(this);
                 script->start(copyWidgetTextCommand.arg(text, QFile::decodeName(KLocalizedString::applicationDomain())), QStringList());
                 connect(script, SIGNAL(finished(int,QProcess::ExitStatus)), script, SLOT(deleteLater()));
             }
+#endif
             e->accept();
             return true;
 

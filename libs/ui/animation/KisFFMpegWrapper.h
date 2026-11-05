@@ -99,7 +99,12 @@ private:
     static void fixUpNonEmbeddedProcessEnvironment(const QString &processPath, QProcess &process);
 
 private:
+#if QT_CONFIG(process)
     QScopedPointer<QProcess> m_process;
+#else
+    // never set: there is no QProcess (iOS)
+    QScopedPointer<QObject> m_process;
+#endif
     QSharedPointer<QProgressDialog> m_progress = nullptr;
     KisFFMpegWrapperSettings m_processSettings;
     

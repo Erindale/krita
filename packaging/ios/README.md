@@ -28,9 +28,9 @@ Drafts for the parts of the iPadOS port that can only be verified with Xcode. Th
    ```
 
    `KRITA_STATIC_BUILD` is on by default for iOS. `KRITA_STATIC_PLUGINS_ALLOWLIST` defaults to the painting set; `ALL` links every plugin.
-3. Qt's own plugins still have to be imported into the executable (`QIOSIntegrationPlugin`, `QSQLiteDriverPlugin`, `QSvgIconPlugin`, `QJpegPlugin`, and the QtQuick QML plugins). With Qt 6's CMake, `qt_import_plugins()` / `qt_import_qml_plugins()` on the `krita` target does this; it is not wired up yet.
-4. Krita's data must be inside the `.app`, flat: `KoResourcePaths::getInstallationPrefix()` returns the executable's directory on iOS, so `share/` from `cmake --install` is copied to `Krita.app/share/`. Translations (`share/locale`) and the MLT paths are not handled.
-5. Archive and export a development `.ipa` for the iPad's UDID, or run on the simulator from Xcode.
+3. Qt's own plugins (`QIOSIntegrationPlugin`, SQLite, image formats, SVG, the QtQuick and Controls QML plugins) are linked by Qt's CMake without any extra code; verified on the simulator (`IOS_KRITA_BUILD.md`).
+4. Krita's data must be inside the `.app`, flat: `KoResourcePaths::getInstallationPrefix()` returns the executable's directory on iOS, so `share/` and `lib/qml` from `cmake --install` are copied to `krita.app/` (in a static build `install(TARGETS)` skips the static libraries). MLT is not built.
+5. Sign and run: ad hoc on the simulator (done, see `IOS_KRITA_BUILD.md`); for the iPad, a development signature and `xcrun devicectl device install app` (Phase 5).
 
 ## Known gaps
 

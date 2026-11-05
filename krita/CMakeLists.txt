@@ -12,6 +12,9 @@ if (ANDROID)
 endif()
 
 set(krita_SRCS main.cc)
+if (IOS)
+    list(APPEND krita_SRCS ios/KisIosApplicationState.mm)
+endif()
 
 # Set the application icon on the application
 if (NOT APPLE)

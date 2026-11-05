@@ -45,6 +45,14 @@
 #include <half.h>
 #endif
 
+// Apple ships these only in its ES2 headers, and Qt includes the ES3 ones
+#ifndef GL_HALF_FLOAT_OES
+#define GL_HALF_FLOAT_OES 0x8D61
+#endif
+#ifndef GL_RGBA32F_EXT
+#define GL_RGBA32F_EXT 0x8814
+#endif
+
 #ifndef GL_CLAMP_TO_EDGE
 #define GL_CLAMP_TO_EDGE 0x812F
 #endif

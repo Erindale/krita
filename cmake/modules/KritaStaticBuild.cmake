@@ -282,3 +282,52 @@ ${_imports}"
     list(LENGTH _plugin_classes _plugin_count)
     message(STATUS "Static build: linking ${_target_count} libraries into ${executable}, registering ${_plugin_count} plugins: ${_plugin_classes}")
 endfunction()
+
+# In a static build every library and plugin is linked into the executable,
+# so their install(TARGETS) rules would only copy archives nothing loads,
+# and fail outright for plugins left out of the build. This override drops
+# static libraries from install(TARGETS) and forwards everything else to
+# the original command unchanged (each argument bracket-quoted, so CODE
+# strings with semicolons survive).
+function(install)
+    set(_first 0)
+    set(_drop_static FALSE)
+    if (ARGV0 STREQUAL "TARGETS")
+        set(_drop_static TRUE)
+        set(_first 1)
+    endif()
+
+    set(_keywords EXPORT ARCHIVE LIBRARY RUNTIME OBJECTS FRAMEWORK BUNDLE
+        PRIVATE_HEADER PUBLIC_HEADER RESOURCE FILE_SET CXX_MODULES_BMI
+        DESTINATION PERMISSIONS CONFIGURATIONS COMPONENT NAMELINK_COMPONENT
+        OPTIONAL EXCLUDE_FROM_ALL NAMELINK_ONLY NAMELINK_SKIP INCLUDES
+        RUNTIME_DEPENDENCIES RUNTIME_DEPENDENCY_SET)
+
+    set(_call "_install(")
+    set(_kept_targets 0)
+    set(_in_targets ${_drop_static})
+    math(EXPR _last "${ARGC} - 1")
+    foreach(_i RANGE 0 ${_last})
+        set(_arg "${ARGV${_i}}")
+        if (_in_targets AND _i GREATER_EQUAL _first)
+            if (_arg IN_LIST _keywords)
+                set(_in_targets FALSE)
+            elseif (TARGET "${_arg}")
+                get_target_property(_type "${_arg}" TYPE)
+                if (_type STREQUAL "STATIC_LIBRARY")
+                    continue()
+                endif()
+                math(EXPR _kept_targets "${_kept_targets} + 1")
+            else()
+                math(EXPR _kept_targets "${_kept_targets} + 1")
+            endif()
+        endif()
+        string(APPEND _call " [==[${_arg}]==]")
+    endforeach()
+    string(APPEND _call ")")
+
+    if (_drop_static AND _kept_targets EQUAL 0)
+        return()
+    endif()
+    cmake_language(EVAL CODE "${_call}")
+endfunction()

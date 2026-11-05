@@ -1599,6 +1599,37 @@ if(KRITA_MOBILE)
         libavutil
         libswscale
     )
+    if(TARGET PkgConfig::LibAV AND APPLE)
+        # A static ffmpeg's .pc files list system frameworks as
+        # "-framework X". FindPkgConfig keeps "-framework" and "X" as
+        # separate link options, and CMake then de-duplicates the repeated
+        # "-framework" items, leaving bare names the linker takes for files.
+        # Re-join each pair into one option.
+        foreach(_libav_prop INTERFACE_LINK_OPTIONS INTERFACE_LINK_LIBRARIES)
+            get_target_property(_libav_items PkgConfig::LibAV ${_libav_prop})
+            if(NOT _libav_items)
+                continue()
+            endif()
+            set(_libav_fixed)
+            set(_libav_after_framework FALSE)
+            foreach(_libav_item IN LISTS _libav_items)
+                if(_libav_after_framework)
+                    list(APPEND _libav_fixed "SHELL:-framework ${_libav_item}")
+                    set(_libav_after_framework FALSE)
+                elseif(_libav_item STREQUAL "-framework")
+                    set(_libav_after_framework TRUE)
+                else()
+                    list(APPEND _libav_fixed "${_libav_item}")
+                endif()
+            endforeach()
+            list(REMOVE_DUPLICATES _libav_fixed)
+            if(_libav_prop STREQUAL "INTERFACE_LINK_LIBRARIES")
+                # link options syntax is not valid among libraries
+                list(FILTER _libav_fixed EXCLUDE REGEX "^SHELL:")
+            endif()
+            set_target_properties(PkgConfig::LibAV PROPERTIES ${_libav_prop} "${_libav_fixed}")
+        endforeach()
+    endif()
     if(TARGET PkgConfig::LibAV)
         add_library(LibAV ALIAS PkgConfig::LibAV)
     endif()
@@ -1690,6 +1721,12 @@ set_package_properties(Fontconfig PROPERTIES
     TYPE REQUIRED
     PURPOSE "Needed for getting font file information."
 )
+if (KRITA_STATIC_BUILD AND TARGET Fontconfig::Fontconfig)
+    # A static libfontconfig needs expat too (its .pc lists it under
+    # Requires), which the find module does not add
+    find_package(EXPAT REQUIRED)
+    set_property(TARGET Fontconfig::Fontconfig APPEND PROPERTY INTERFACE_LINK_LIBRARIES EXPAT::EXPAT)
+endif()
 
 ##
 ## Check for libunibreak

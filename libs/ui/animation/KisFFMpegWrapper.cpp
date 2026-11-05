@@ -9,7 +9,9 @@
 #include <klocalizedstring.h>
 
 #include <KoResourcePaths.h>
+#if QT_CONFIG(process)
 #include <QProcess>
+#endif
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
@@ -47,6 +49,13 @@ void KisFFMpegWrapper::startNonBlocking(const KisFFMpegWrapperSettings &settings
 {
     KIS_ASSERT(m_process == nullptr);
 
+#if !QT_CONFIG(process)
+    // No QProcess (iOS): Krita cannot run an external ffmpeg or ffprobe.
+    // Report the failure the way a failed start would.
+    m_processSettings = settings;
+    m_errorMessage = i18n("Running external programs is not supported on this platform.");
+    Q_EMIT sigFinishedWithError(m_errorMessage);
+#else
     m_stdoutBuffer.clear();
     m_errorMessage.clear();
     m_processSTDOUT.clear();
@@ -158,6 +167,7 @@ void KisFFMpegWrapper::startNonBlocking(const KisFFMpegWrapperSettings &settings
     fixUpNonEmbeddedProcessEnvironment(settings.processPath, *m_process);
 
     m_process->start(settings.processPath, args);
+#endif
 }
 
 KisImportExportErrorCode KisFFMpegWrapper::start(const KisFFMpegWrapperSettings &settings)
@@ -197,9 +207,13 @@ bool KisFFMpegWrapper::waitForFinished(int msecs)
 {
     if (!m_process) return false;
 
+#if QT_CONFIG(process)
     if (m_process->waitForStarted(msecs)) {
         return (m_process->waitForFinished(msecs) && m_process->exitStatus() == QProcess::ExitStatus::NormalExit);
     }
+#else
+    Q_UNUSED(msecs);
+#endif
 
     return false;
 }
@@ -221,9 +235,11 @@ void KisFFMpegWrapper::updateProgressDialog(int progressValue) {
 
     if (m_processSettings.totalFrames > 0) m_progress->setValue(100 * progressValue / m_processSettings.totalFrames);
 
+#if QT_CONFIG(process)
     if (m_process && m_process->state() == QProcess::Running) {
         QApplication::processEvents();
     }
+#endif
 }
 
 bool KisFFMpegWrapper::ffprobeCheckStreamsValid(const QJsonObject& ffprobeJsonObj, const QString& ffprobeSTDERR)
@@ -256,15 +272,21 @@ void KisFFMpegWrapper::reset()
         return;
 
     m_process->disconnect(this);
+#if QT_CONFIG(process)
     if (m_process->state() != QProcess::NotRunning) {
         m_process->kill();
     }
+#endif
     m_process.reset();
 }
 
 void KisFFMpegWrapper::slotReadyReadSTDERR()
 {
+#if QT_CONFIG(process)
     QByteArray stderrRawBuffer = m_process->readAllStandardError();
+#else
+    QByteArray stderrRawBuffer;
+#endif
     
     Q_EMIT sigReadSTDERR(stderrRawBuffer);
     m_stderrBuffer += stderrRawBuffer;
@@ -309,7 +331,11 @@ void KisFFMpegWrapper::slotReadyReadSTDERR()
 
 void KisFFMpegWrapper::slotReadyReadSTDOUT()
 {
+#if QT_CONFIG(process)
     QByteArray stdoutRawBuffer = m_process->readAllStandardOutput();
+#else
+    QByteArray stdoutRawBuffer;
+#endif
     
     Q_EMIT sigReadSTDOUT(stdoutRawBuffer);
     m_stdoutBuffer += stdoutRawBuffer;
@@ -356,9 +382,11 @@ void KisFFMpegWrapper::slotFinished(int exitCode)
     
     if (exitCode != 0) {
         m_errorMessage.remove(junkRegex);
+#if QT_CONFIG(process)
         if (m_process->exitStatus() == QProcess::CrashExit) {
             m_errorMessage = i18n("FFMpeg Crashed") % "\n" % m_errorMessage;
         }
+#endif
 
         Q_EMIT sigFinishedWithError(m_errorMessage);
     } else {
@@ -415,6 +443,12 @@ void KisFFMpegWrapper::fixUpNonEmbeddedProcessEnvironment(const QString &process
 
 QByteArray KisFFMpegWrapper::runProcessAndReturn(const QString &processPath, const QStringList &args, int msecs)
 {
+#if !QT_CONFIG(process)
+    Q_UNUSED(processPath);
+    Q_UNUSED(args);
+    Q_UNUSED(msecs);
+    return "";
+#else
     QProcess runProcess;
     
     fixUpNonEmbeddedProcessEnvironment(processPath, runProcess);
@@ -432,6 +466,7 @@ QByteArray KisFFMpegWrapper::runProcessAndReturn(const QString &processPath, con
     if (successfulStart) return runProcess.readAllStandardOutput();
 
     return "";
+#endif
 }
 
 QString KisFFMpegWrapper::configuredFFMpegLocation()

@@ -6,7 +6,9 @@
 
 #include "kbugreport.h"
 
+#if QT_CONFIG(process)
 #include <QProcess>
+#endif
 #include <QCoreApplication>
 #include <QDialogButtonBox>
 #include <QPushButton>
@@ -53,7 +55,9 @@ public:
     void _k_updateUrl();
 
     KisKBugReport *q {nullptr};
+#if QT_CONFIG(process)
     QProcess *m_process {nullptr};
+#endif
     KAboutData m_aboutData;
 
     QTextEdit *m_lineedit {nullptr};
@@ -91,7 +95,9 @@ KisKBugReport::KisKBugReport(const KAboutData &aboutData, QWidget *_parent)
     connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
 
     d->m_aboutData = aboutData;
+#if QT_CONFIG(process)
     d->m_process = 0;
+#endif
     KGuiItem::assign(buttonBox->button(QDialogButtonBox::Cancel), KStandardGuiItem::close());
 
     QLabel *tmpLabel;
