@@ -47,6 +47,7 @@
 #include <opengl/kis_opengl.h>
 #ifdef Q_OS_IOS
 #include "ios/KisIosApplicationState.h"
+#include "ios/KisIosDialogFitter.h"
 #endif
 #include "KritaVersionWrapper.h"
 
@@ -836,6 +837,10 @@ if (!qEnvironmentVariableIsEmpty("KRITA_OPENGL_DEBUG")) {
     KisApplication::setAttribute(Qt::AA_DisableWindowContextHelpButton);
 #endif
     app.installEventFilter(KisQtWidgetsTweaker::instance());
+#ifdef Q_OS_IOS
+    // no window manager on iOS: keep oversized dialogs on the screen
+    app.installEventFilter(new KisIosDialogFitter(&app));
+#endif
     app.setDesktopFileName(QStringLiteral("org.kde.krita"));
 
 #ifndef Q_OS_IOS

@@ -14,6 +14,7 @@ endif()
 set(krita_SRCS main.cc)
 if (IOS)
     list(APPEND krita_SRCS ios/KisIosApplicationState.mm)
+    list(APPEND krita_SRCS ios/KisIosDialogFitter.cpp)
 endif()
 
 # Set the application icon on the application
@@ -244,16 +245,19 @@ elseif (IOS)
     set(KRITA_VERSION_NUMBER_STRING "${KRITA_STABLE_VERSION_MAJOR}.${KRITA_STABLE_VERSION_MINOR}.${KRITA_VERSION_RELEASE}")
     set(KRITA_IOS_DEPLOYMENT_TARGET "${CMAKE_OSX_DEPLOYMENT_TARGET}")
     set(KRITA_IOS_DEVELOPMENT_TEAM "" CACHE STRING "Apple developer team id used to sign the iPadOS build")
+    # App IDs are unique across all developer accounts, so a personal build
+    # usually needs an identifier of its own
+    set(KRITA_IOS_BUNDLE_IDENTIFIER "org.krita.ipad" CACHE STRING "Bundle identifier of the iPadOS app")
     set_target_properties(krita PROPERTIES
         MACOSX_BUNDLE TRUE
         MACOSX_BUNDLE_INFO_PLIST "${CMAKE_SOURCE_DIR}/packaging/ios/Info.plist.in"
-        MACOSX_BUNDLE_GUI_IDENTIFIER "org.krita.ipad"
+        MACOSX_BUNDLE_GUI_IDENTIFIER "${KRITA_IOS_BUNDLE_IDENTIFIER}"
         MACOSX_BUNDLE_BUNDLE_NAME "Krita"
         MACOSX_BUNDLE_LONG_VERSION_STRING "${KRITA_VERSION_STRING}"
         MACOSX_BUNDLE_SHORT_VERSION_STRING "${KRITA_VERSION_NUMBER_STRING}"
         MACOSX_BUNDLE_BUNDLE_VERSION "${KRITA_VERSION_NUMBER_STRING}"
         MACOSX_BUNDLE_COPYRIGHT "GNU Public License, V2 or, at your option, any later version."
-        XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "org.krita.ipad"
+        XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "${KRITA_IOS_BUNDLE_IDENTIFIER}"
         XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "2"
         XCODE_ATTRIBUTE_CODE_SIGN_STYLE "Automatic"
         XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "${KRITA_IOS_DEVELOPMENT_TEAM}"
