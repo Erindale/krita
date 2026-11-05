@@ -120,7 +120,7 @@ Six phases. The first is Linux-only and costs nothing but agent time; nothing af
 **Phase 5: device**
 
 - [ ] Development `.ipa` exported for the iPad's UDID
-- [ ] Installed on the iPad
+- [x] Installed on the iPad (direct install with `devicectl`, see `IOS_DEVICE_BUILD.md`)
 - [ ] Pencil pressure and tilt work
 - [ ] Survives a 500 MB document without being killed
 

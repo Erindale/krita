@@ -73,6 +73,9 @@ All on the simulator, by tapping through the UI and taking screenshots:
 
 ## For Phase 5 (device)
 
+Done since: see `IOS_DEVICE_BUILD.md`. The notes below are what this phase handed over.
+
+
 - **Configure:** the same configure line with `KDECI_IOS_SDK=iphoneos`, against `deps-iphoneos`. That prefix already has both Qt fixes.
 - **Signing:** the bundle needs real signing (team `5U93YR33HD`, bundle id `org.krita.ipad`). Either build with the Xcode generator and `-DKRITA_IOS_DEVELOPMENT_TEAM=5U93YR33HD`, or sign the Ninja-built bundle with `codesign` and a development profile.
 - **Install:** `xcrun devicectl device install app` with the iPad connected.
