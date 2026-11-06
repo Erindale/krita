@@ -6,8 +6,8 @@ Phase 5 of the personal iPadOS port (see `IOS_PORT_PLAN.md`): Krita built for th
 - Krita runs on an iPad mini (A17 Pro, iPadOS 27.0.1), installed over Wi-Fi.
 - The device build needed no source changes beyond Phase 4.
 - The first real-device issue, a settings dialog that could not be closed, is fixed and confirmed on the iPad.
-- Apple Pencil pressure and tilt work. Barrel roll (Pencil Pro) needed a Qt patch; it is waiting for a check on the iPad.
-- **Still open:** behaviour with large documents.
+- Apple Pencil pressure and tilt work. Pencil Pro barrel roll needed a Qt patch; the first version ran the wrong way and was reversed, and the reversed build has not been confirmed yet.
+- Large documents: about 30 layers of 2500 × 3500 (about 1 GB of 8-bit RGBA pixels) open without iPadOS closing the app.
 
 ## Device and signing
 
@@ -38,14 +38,14 @@ All of this is `/Volumes/Krita/krita-ios/scripts/run-krita-device.sh`. It finds 
 | With an autosave file left over, the launch stayed black: the recovery dialog ran a nested event loop inside UIKit's "did become active" callback, and UIKit can't finish activating the scene until that returns | `krita/ios/KisIosApplicationState.mm` now starts Krita with a queued call from Qt's event loop after the notification, instead of inside it | Verified on the iPad mini simulator: the recovery dialog appears and recovering works |
 | The brush editor, once fitted, could fill the whole screen in detached mode (a borderless window on iOS), leaving no way to close it | `KisPopupButton` on iOS: popups are always attached (`setPopupWidgetDetached()` ignores detach), and capped to the space below their button, so the toolbar stays visible. Tapping the button again or anywhere outside the popup closes it | Verified on the iPad mini simulator; confirmed on the iPad |
 | No app icon | `krita/CMakeLists.txt` (iOS): compiles the same Icon Composer icon as macOS (`pics/branding/<branding>/krita.icon`) with `actool` for the SDK in use, and copies `Assets.car` and the fallback PNGs into the bundle after the link. `Info.plist.in` declares `CFBundleIcons`/`CFBundleIcons~ipad` (icon name `krita`) | Shows on the simulator's home screen and Dock (Liquid Glass style); confirmed on the iPad |
-| Apple Pencil Pro barrel roll did nothing: Qt for iOS passed a rotation of 0 with every Pencil event | Deps fork, `ext_qt/0003-iOS-pass-Apple-Pencil-Pro-barrel-roll-as-tablet-rotation.patch`: `quiview.mm` passes `UITouch.rollAngle` (and the hover recognizer's `rollAngle`, iOS 17.5+) converted to degrees and negated as `QTabletEvent::rotation()` (UIKit counts anticlockwise, Qt and Krita clockwise; the first version had it the wrong way round on the iPad), and the Pencil device reports the `Rotation` capability. Krita's Rotation sensor reads it from there | Pressure and tilt confirmed on the iPad; roll reached Krita but was inverted, so the sign is flipped; the corrected build needs a check there (the simulator has no Pencil) |
+| Apple Pencil Pro barrel roll did nothing: Qt for iOS passed a rotation of 0 with every Pencil event | Deps fork, `ext_qt/0003-iOS-pass-Apple-Pencil-Pro-barrel-roll-as-tablet-rotation.patch`: `quiview.mm` passes `UITouch.rollAngle` (and the hover recognizer's `rollAngle`, iOS 17.5+) converted to degrees and negated as `QTabletEvent::rotation()` (UIKit counts anticlockwise, Qt and Krita clockwise; the first version had it the wrong way round on the iPad), and the Pencil device reports the `Rotation` capability. Krita's Rotation sensor reads it from there | Pressure and tilt confirmed on the iPad; roll reached Krita but was inverted, so the sign is flipped; the reversed build is installed, not yet confirmed |
 | In New Document, the dropdowns (unit, colour model) did not open, and tapping a number field (width, resolution) gave no keyboard | Both came from the keyboard policy. Qt shows a dropdown's list as a native picker in the keyboard's place, and it asks for that with the same input method query the policy was answering "no" to; non-editable combo boxes are now left alone. Number fields now unlock on a tap (released within 12 points of the press), so dragging a slider spin box still never brings the keyboard up | Verified on the iPad mini simulator: the unit dropdown opens the picker, and tapping Resolution brings up the keyboard on its numbers page |
+| Memory with a large document (the plan's 500 MB test) | None needed. A document duplicated up to about 30 layers of 2500 × 3500 (about 1 GB of 8-bit RGBA pixels, possibly less in memory, since duplicated layers share tiles until painted on) | Done on the iPad: iPadOS did not close Krita |
 | The main window kept the screen size it had at launch | `libs/ui/KisMainWindow.cpp` (iOS): the window follows the screen's `availableGeometryChanged`, e.g. on rotation | Built; not specifically checked |
 
 ## Still to check on the iPad
 
 - **Pencil:** barrel roll on the Pencil Pro, e.g. a preset with the Rotation sensor, and hover.
-- **Memory:** a large document, to see whether iPadOS kills the app (the plan's 500 MB test).
 - **Behaviour:** rotation, multitasking (Split View), and saving and opening through the Files picker on the device.
 - **Phase 6:** bundles dropped into the Krita folder in the Files app.
 
