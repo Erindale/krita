@@ -43,11 +43,37 @@ All of this is `/Volumes/Krita/krita-ios/scripts/run-krita-device.sh`. It finds 
 | Memory with a large document (the plan's 500 MB test) | None needed. A document duplicated up to about 30 layers of 2500 × 3500 (about 1 GB of 8-bit RGBA pixels, possibly less in memory, since duplicated layers share tiles until painted on) | Done on the iPad: iPadOS did not close Krita |
 | The main window kept the screen size it had at launch | `libs/ui/KisMainWindow.cpp` (iOS): the window follows the screen's `availableGeometryChanged`, e.g. on rotation | Built; not specifically checked |
 
+## What does not work yet
+
+Most of what is missing comes from one decision in Phase 4. iOS cannot load plugins at runtime, so the build links plugins into the executable, and only the 17 in `KRITA_STATIC_PLUGINS_ALLOWLIST` (`cmake/modules/KritaStaticBuild.cmake`). The list was kept to the minimum needed to start, paint, save and reopen a `.kra`:
+- the colour engine
+- the default and colour-smudge paintops
+- the default, selection, transform and flake tools
+- image and path shapes
+- KRA and PNG import and export
+- the Layers, Brush Presets, Advanced Colour Selector and Undo History dockers
+
+Anything else that Krita implements as a plugin is absent. Its menu entries either do nothing or, where Krita assumes the plugin exists, crash.
+
+| Area | On the iPad | Plugins it needs (`plugins/…`) |
+|---|---|---|
+| Bundles and resource import | Settings › Manage Resources is missing, so no bundles can be added. **The one gap that blocks the user's workflow** | `extensions/resourcemanager` (`kritaresourcemanager`) |
+| Filters | The Filter menu is empty | `filters/*`: about 30 plugins (blur, colors, colorsfilters, levelfilter, unsharp, …) |
+| Fill layers | **Layer › New › Fill Layer crashes the app** (reported on the iPad). It has no generators to offer | `generators/*` (solid, gradient, pattern, screentone, simplexnoise, multigridpattern, seexpr) |
+| Filter layers and masks | Need filters, so empty at best; not tried | as Filters |
+| File formats | Only `.kra` and `.png` open and save: no JPEG, PSD, ORA, WebP, TIFF, EXR, GIF, PDF, SVG | `impex/*` (jpeg, psd, ora, qimageio, exr, …) |
+| Image and layer commands | Rotate, shear and offset image, colour-space conversion, split layer and image, wavelet decompose and similar are missing | `extensions/*` |
+| Dockers | Only Layers, Brush Presets, Advanced Colour Selector and Undo History. No palette, pattern, overview, touch, animation timeline, recorder, snapshot, etc. | `dockers/*` |
+| Assistants, brush engines | No painting assistants. Only the pixel brush, clone and colour-smudge engines. Presets for the others (sketch, spray, hairy, particle, deform, curve, grid, hatching, filter, tangent normal, shape, quick, MyPaint) cannot paint | `assistants`, `paintops/*` |
+| Python scripting | Absent. There is no Python on iOS in this build, so it stays out | `extensions/pykrita` |
+
+**What adding plugins costs:** add a target name to `KRITA_STATIC_PLUGINS_ALLOWLIST` (or set it to `ALL`) and rebuild. Each new plugin may need dependencies the iOS prefix lacks (e.g. libheif, OpenEXR, poppler, SeExpr). It may also have code that assumes desktop features (`QProcess`, file dialogs) and need the same kind of guards as in Phase 4. Plugins that assumed another plugin was there, like the fill-layer dialog, should come back with the plugin they wanted rather than get a separate fix.
+
 ## Still to check on the iPad
 
 - **Pencil:** hover.
 - **Behaviour:** rotation, multitasking (Split View), and saving and opening through the Files picker on the device.
-- **Phase 6:** bundles dropped into the Krita folder in the Files app.
+- **Phase 6:** bundles. Link `kritaresourcemanager`, then import a `.bundle` from the Files picker through Settings › Manage Resources, and check bundles dropped into the Krita folder in the Files app.
 
 ## Simulator note
 
