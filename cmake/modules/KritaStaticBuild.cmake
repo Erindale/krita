@@ -22,6 +22,21 @@ set(KRITA_STATIC_PLUGINS_ALLOWLIST_DEFAULT
     # paintops
     kritadefaultpaintops
     kritacolorsmudgepaintop
+    # every other brush engine, so presets in imported bundles can paint
+    # (the filter engine paints nothing until filters are linked too)
+    kritacurvepaintop
+    kritadeformpaintop
+    kritaexperimentpaintop
+    kritafilterop
+    kritagridpaintop
+    kritahairypaintop
+    kritahatchingpaintop
+    kritamypaintop
+    kritaparticlepaintop
+    kritaroundmarkerpaintop
+    kritasketchpaintop
+    kritaspraypaintop
+    kritatangentnormalpaintop
     # tools; krita_flaketools provides the fallback InteractionTool
     kritadefaulttools
     kritaselectiontools
@@ -41,6 +56,8 @@ set(KRITA_STATIC_PLUGINS_ALLOWLIST_DEFAULT
     kritapresetdocker
     kritacolorselectorng
     kritahistorydocker
+    # Settings > Manage Resources: importing bundles, brushes and other resources
+    kritaresourcemanager
 )
 
 set(KRITA_STATIC_PLUGINS_ALLOWLIST "${KRITA_STATIC_PLUGINS_ALLOWLIST_DEFAULT}" CACHE STRING

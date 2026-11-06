@@ -7,6 +7,7 @@ Phase 5 of the personal iPadOS port (see `IOS_PORT_PLAN.md`): Krita built for th
 - The device build needed no source changes beyond Phase 4.
 - The first real-device issue, a settings dialog that could not be closed, is fixed and confirmed on the iPad.
 - Apple Pencil pressure, tilt and Pencil Pro barrel roll work. Roll needed a Qt patch; its first version ran the wrong way and was reversed.
+- Bundles import through Settings › Manage Resource Libraries, or load from the Krita › Resources folder in the Files app (Phase 6, below).
 - Large documents: about 30 layers of 2500 × 3500 (about 1 GB of 8-bit RGBA pixels) open without iPadOS closing the app.
 
 ## Device and signing
@@ -45,9 +46,10 @@ All of this is `/Volumes/Krita/krita-ios/scripts/run-krita-device.sh`. It finds 
 
 ## What does not work yet
 
-Most of what is missing comes from one decision in Phase 4. iOS cannot load plugins at runtime, so the build links plugins into the executable, and only the 17 in `KRITA_STATIC_PLUGINS_ALLOWLIST` (`cmake/modules/KritaStaticBuild.cmake`). The list was kept to the minimum needed to start, paint, save and reopen a `.kra`:
+Most of what is missing comes from one decision in Phase 4. iOS cannot load plugins at runtime, so the build links plugins into the executable, and only those in `KRITA_STATIC_PLUGINS_ALLOWLIST` (`cmake/modules/KritaStaticBuild.cmake`). Phase 4 kept the list to the 17 needed to start, paint, save and reopen a `.kra`. Phase 6 (bundles, below) added the resource manager and every brush engine, for 31:
 - the colour engine
-- the default and colour-smudge paintops
+- all 14 brush-engine plugins, MyPaint included
+- the resource manager (Settings › Manage Resource Libraries and Manage Resources)
 - the default, selection, transform and flake tools
 - image and path shapes
 - KRA and PNG import and export
@@ -57,14 +59,14 @@ Anything else that Krita implements as a plugin is absent. Its menu entries eith
 
 | Area | On the iPad | Plugins it needs (`plugins/…`) |
 |---|---|---|
-| Bundles and resource import | Settings › Manage Resources is missing, so no bundles can be added. **The one gap that blocks the user's workflow** | `extensions/resourcemanager` (`kritaresourcemanager`) |
 | Filters | The Filter menu is empty | `filters/*`: about 30 plugins (blur, colors, colorsfilters, levelfilter, unsharp, …) |
 | Fill layers | **Layer › New › Fill Layer crashes the app** (reported on the iPad). It has no generators to offer | `generators/*` (solid, gradient, pattern, screentone, simplexnoise, multigridpattern, seexpr) |
 | Filter layers and masks | Need filters, so empty at best; not tried | as Filters |
 | File formats | Only `.kra` and `.png` open and save: no JPEG, PSD, ORA, WebP, TIFF, EXR, GIF, PDF, SVG | `impex/*` (jpeg, psd, ora, qimageio, exr, …) |
 | Image and layer commands | Rotate, shear and offset image, colour-space conversion, split layer and image, wavelet decompose and similar are missing | `extensions/*` |
 | Dockers | Only Layers, Brush Presets, Advanced Colour Selector and Undo History. No palette, pattern, overview, touch, animation timeline, recorder, snapshot, etc. | `dockers/*` |
-| Assistants, brush engines | No painting assistants. Only the pixel brush, clone and colour-smudge engines. Presets for the others (sketch, spray, hairy, particle, deform, curve, grid, hatching, filter, tangent normal, shape, quick, MyPaint) cannot paint | `assistants`, `paintops/*` |
+| Assistants | No painting assistants | `assistants` |
+| Filter brush engine | Linked, but has no filters to apply until filters are linked | `filters/*` |
 | Python scripting | Absent. There is no Python on iOS in this build, so it stays out | `extensions/pykrita` |
 
 **What adding plugins costs:** add a target name to `KRITA_STATIC_PLUGINS_ALLOWLIST` (or set it to `ALL`) and rebuild. Each new plugin may need dependencies the iOS prefix lacks (e.g. libheif, OpenEXR, poppler, SeExpr). It may also have code that assumes desktop features (`QProcess`, file dialogs) and need the same kind of guards as in Phase 4. Plugins that assumed another plugin was there, like the fill-layer dialog, should come back with the plugin they wanted rather than get a separate fix.
@@ -73,8 +75,20 @@ Anything else that Krita implements as a plugin is absent. Its menu entries eith
 
 - **Pencil:** hover.
 - **Behaviour:** rotation, multitasking (Split View), and saving and opening through the Files picker on the device.
-- **Phase 6:** bundles. Link `kritaresourcemanager`, then import a `.bundle` from the Files picker through Settings › Manage Resources, and check bundles dropped into the Krita folder in the Files app.
+
+## Phase 6: bundles
+
+Bundles were the one missing piece for the user's own work.
+
+| | |
+|---|---|
+| Change | `KRITA_STATIC_PLUGINS_ALLOWLIST` adds `kritaresourcemanager` and the 13 brush-engine plugins that were missing: curve, deform, experiment (shape), filter, grid, hairy, hatching, MyPaint, particle, round marker (quick), sketch, spray, tangent normal. They need no new dependencies (libmypaint was already in the prefix). The simulator app grew from 249 MB to 256 MB |
+| Existing build trees | The allowlist is a cache variable, so a tree configured earlier keeps its old list: reconfigure with `cmake -U KRITA_STATIC_PLUGINS_ALLOWLIST .` in the build directory |
+| Import through Krita | Settings › Manage Resource Libraries › Import opens the iOS Files picker. A `.bundle` anywhere the picker reaches (On My iPad, iCloud Drive) is copied into Krita's resources and listed at once |
+| Drop into the Files app | Krita loads every `.bundle` in **On My iPad › Krita › Resources** at startup, the same folder its own default bundles live in. Copy one there in the Files app and restart Krita |
+| Tested with | Expressive Inks v2.1 (18 presets: 15 pixel brush, 1 colour smudge, 1 sketch, 1 hatching). Before the engines were added, the sketch and hatching presets failed to load ("Could not load the resource from the bundle"); after, all 18 load and the sketch preset paints |
+| Status | Both routes verified on the iPad mini simulator; installed on the iPad |
 
 ## Simulator note
 
-Installing a new build over the old one and launching it sometimes left the simulator window black: the root view was never laid out. A fresh install always works, so `run-krita-sim.sh` now uninstalls first. The device has not shown it.
+Installing a new build over the old one and launching it sometimes left the simulator window black: the root view was never laid out. A fresh install always works, so `run-krita-sim.sh` now uninstalls first. Relaunching after `simctl terminate` can do it too; rebooting the simulator (`simctl shutdown` and `boot`) brings it back without losing the app's files. The device has not shown it.
